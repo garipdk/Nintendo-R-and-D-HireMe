@@ -8,6 +8,7 @@
 #include <wchar.h>
 #include <locale.h>
 #include <memory.h>
+#include <ctype.h>
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -112,18 +113,31 @@ void prints128(__int128 n)
     return;
 }
 
-void print_dec(u8 s[],u32 size, u32 nb_per_line)
-{
-    if(size>1)
-        printf("%s\n",s);
-    for(u32 i = 0; i < size; i++)
-    {
-        printf("%03d", s[i]);
-        if(i+1<size)
-            printf(", ");
 
-        if((i+1)%nb_per_line==0)
-            printf("\n");
+void print_coherant_parts(u8 str[], u32 size)
+{
+    for(u32 i = 0; i < size; i++)
+        if(isprint(str[i]))
+            putchar(str[i]);
+    putchar('\n');
+    return;
+}
+void print_dec(u8 s[],u32 size, u32 nb_per_line, u8 gen_mode)
+{
+    print_coherant_parts(s, 32);
+    if(gen_mode == 'A')
+    {
+        if(size>1)
+            printf("%s\n",s);
+        for(u32 i = 0; i < size; i++)
+        {
+            printf("%03d", s[i]);
+            if(i+1<size)
+                printf(", ");
+
+            if((i+1)%nb_per_line==0)
+                printf("\n");
+        }
     }
 }
 
@@ -264,21 +278,16 @@ bool coherant_string(u8 str[], u32 size)
 {
     for(u32 i = 0; i < size; i++)
     {
-        if(str[i]< 31 || str[i]>127)
+        if(!isprint(str[i]))
         {
             if(str[i]==0)
-            {
-                if(i==0)
-                    return false;
-                return true;
-            }
-            else
-                return false;
+                if(i!=0)
+                    return true;
+            return false;
         }
     }
     return false;
 }
-
 void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u128 gen_input_num)
 {
     u32 found2;
@@ -407,14 +416,14 @@ void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u
                     if(coherant)
                     {
                         iterration++;
-                        printf("Input Found Number = ");
-                        printu128(iterration);
-                        printf(";\n");
-                        printf("===================================================\n");
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
-                        print_dec(demanded_input, 32, 8);
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
-                        printf("===================================================\n");
+                        // printf("Input Found Number = ");
+                        // printu128(iterration);
+                        // printf(";\n");
+                        // printf("===================================================\n");
+                        // printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        // print_dec(demanded_input, 32, 8, gen_mode);
+                        // printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        // printf("===================================================\n");
                     }
                 }
                 if(gen_mode == 'N' || gen_mode == 'A')
@@ -422,13 +431,12 @@ void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u
                     if(!coherant)
                     {
                         iterration++;
-                        printf("Input Found Number = ");
-                        printu128(iterration);
-                        printf(";\n");
-                        print_dec(demanded_input, 32, 8);
+                        // printf("Input Found Number = ");
+                        // printu128(iterration);
+                        // printf(";\n");
+                        // print_dec(demanded_input, 32, 8, gen_mode);
                     }
                 }
-
                 if(iterration == gen_input_num)
                     return;
             }
