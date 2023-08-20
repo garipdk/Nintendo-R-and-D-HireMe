@@ -553,6 +553,20 @@ std::string bitset_to_string(std::bitset<n> bits){
     return toreturn;
 }
 */
+int compare(const void* num1, const void* num2) // comparing function  
+{  
+    u8 a = *(u8*) num1;  
+    u8 b = *(u8*) num2;  
+    if(a > b)  
+    {  
+        return 1;  
+    }  
+    else if(a < b)  
+    {  
+        return -1;  
+    }  
+    return 0;  
+}
 int main()
 {
     // print_extend_ascii();
