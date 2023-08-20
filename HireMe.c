@@ -171,30 +171,23 @@ bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
         output_[j]=0;
         for(u8 k=0;k<32;k++)
             output_[j]^=demanded_input[k]*((diffusion[j]>>k)&1);
-    }
-
-    for(u8 j=0;j<32;j++)
         if(output_[j] == 15  || output_[j] == 17  || output_[j] == 32  || output_[j] == 62
         || output_[j] == 68  || output_[j] == 90  || output_[j] == 107 || output_[j] == 117
         || output_[j] == 128 || output_[j] == 158 || output_[j] == 175 || output_[j] == 177
         || output_[j] == 203 || output_[j] == 213 || output_[j] == 228 || output_[j] == 250)
             return false;
+    }
 
     u8 found_two_total = 0;
     for(u8 j = 0; j < 32; j++)
     {
         found_num[j] = 0;
-    }
-    for(u8 j = 0; j < 32; j++)
         for(u32 k = 0; k < 256; k++)
             if(output_[j] == confusion[k])
                 found_num[j]++;
-    
-
-    for(u8 j = 0; j < 32; j++)
         if(found_num[j]==2)
             found_two_total++;
-
+    }
     
     u8 found[found_two_total][2];
 
@@ -608,7 +601,7 @@ int main(int argc, char* argv[])
     u8 output[32];
     //u8 output_test[32];
     all_input_combinaisons(input_generated, target, gen_mode, gen_input_num);
-    //print_dec(input_generated, 32, 8);
+    //print_dec(input_generated, 32, 8, gen_mode);
     
     Forward(input_generated, output, confusion, diffusion);
     //print_dec(input, 32, 8);
