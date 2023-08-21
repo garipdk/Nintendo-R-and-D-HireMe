@@ -217,9 +217,9 @@ void prints128(__int128 n)
 }
 
 
-bool coherant_string(u8 str[], u32 size)
+bool coherant_string(u8 str[], u8 size)
 {
-    for(u32 i = 0; i < size; i++)
+    for(u8 i = 0; i < size; i++)
     {
         if(!isprint(str[i]))
         {
@@ -231,23 +231,23 @@ bool coherant_string(u8 str[], u32 size)
     }
     return false;
 }
-void print_coherant_parts(u8 str[], u32 size)
+void print_coherant_parts(u8 str[], u8 size)
 {
-    for(u32 i = 0; i < size; i++)
+    for(u8 i = 0; i < size; i++)
         if(isprint(str[i]))
             putchar(str[i]);
     putchar('\n');
     return;
 }
 
-void print_dec(u8 s[],u32 size, u32 nb_per_line, u8 gen_mode)
+void print_dec(u8 s[], u8 size, u8 nb_per_line, u8 gen_mode)
 {
     print_coherant_parts(s, 32);
     if(gen_mode == 'A')
     {
         if(size>1)
             printf("%s\n",s);
-        for(u32 i = 0; i < size; i++)
+        for(u8 i = 0; i < size; i++)
         {
             printf("%03d", s[i]);
             if(i+1<size)
@@ -259,24 +259,24 @@ void print_dec(u8 s[],u32 size, u32 nb_per_line, u8 gen_mode)
     }
 }
 
-void Forward(u8 input_[32],u8 output_[32],u8 confusion_[512],u32 diffusion_[32])
+void Forward(u8 input_[32], u8 output_[32])
 {
-    for(u32 i=0;i<256;i++)
+    for(/*u16*/ u32 i=0;i<256;i++)
     {
         for(u8 j=0;j<32;j++)
         {
-            output_[j]=confusion_[input_[j]];
+            output_[j]=confusion[input_[j]];
             input_[j]=0;
         }
         for(u8 j=0;j<32;j++)
             for(u8 k=0;k<32;k++)
-                input_[j]^=output_[k]*((diffusion_[j]>>k)&1);
+                input_[j]^=output_[k]*((diffusion[j]>>k)&1);
     }
     for(u8 i=0;i<16;i++)
-        output_[i]=confusion_[input_[i*2]]^confusion_[input_[i*2+1]+256];
+        output_[i]=confusion[input_[i*2]]^confusion[input_[i*2+1]+256];
 }
 
-bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
+bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
 {
     u8 output_[32];
     u8 found_num[32];
@@ -300,7 +300,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
     for(u8 j = 0; j < 32; j++)
     {
         found_num[j] = 0;
-        for(u32 k = 0; k < 256; k++)
+        for(/*u16*/ u32 k = 0; k < 256; k++)
             if(output_[j] == confusion[k])
                 found_num[j]++;
         if(found_num[j]==2)
@@ -311,16 +311,17 @@ bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
 
 
     for(u8 j = 0; j < found_two_total; j++)
-        for(u8 k = 0; k < 2; k++)
-            found[j][k]=0;
-
+    {
+        found[j][0]=0;
+        found[j][1]=0;
+    }
     u8 num_found_two = 0;
     for(u8 j = 0; j < 32; j++)
     {
         if(found_num[j]==2)
         {
             u8 num_found_two0 = 0;
-            for(u32 k = 0; k < 256; k++)
+            for(/*u16*/ u32 k = 0; k < 256; k++)
             {
                 if(output_[j] == confusion[k])
                 {
@@ -331,7 +332,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
             num_found_two++;
         }
         if(found_num[j]==1)
-            for(u32 k = 0; k < 256; k++)
+            for(/*u16*/ u32 k = 0; k < 256; k++)
                 if(output_[j] == confusion[k])
                     demanded_input[j] = k;
     }
@@ -375,7 +376,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
     {
         u8 output0_[32];
         memcpy(demanded_input0, demanded_input, 32);
-        Forward(demanded_input0, output0_, confusion, diffusion);
+        Forward(demanded_input0, output0_);
         if(memcmp(output0_, target, 16)==0)
         {
             //print_dec(demanded_input, 32, 8);
@@ -387,76 +388,74 @@ bool Backward(u8 demanded_input[32], u8 target[16], u32 i)
 
 void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u128 gen_input_num)
 {
-    u32 found2;
-    u32 found1=0;
+    /*u16*/ u32 found;
     bool coherant;
     u8 all_pairs[16][256][2];
     for(u8 i = 0; i < 16; i++)
     {
-        found2 = 0;
-        for(u32 k = 0; k < 256; k++)
+        found = 0;
+        for(/*u16*/ u32 k = 0; k < 256; k++)
         {
-            for(u32 j = 256; j < 512; j++)
+            for(/*u16*/ u32 j = 256; j < 512; j++)
             {
                 if((confusion[k]^confusion[j]) == target[i])
                 {
-                    all_pairs[i][found2][0] = k;
-                    all_pairs[i][found2][1] = j-256;
-                    found2++;
-                    found1++;
+                    all_pairs[i][found][0] = k;
+                    all_pairs[i][found][1] = j-256;
+                    found++;
                 }
             }
         }
     }
     u128 iterration = 0;
-    u128 it_all = 0;
+    //u128 it_all = 0;
     //printf("All pairs computed!\n");
-    for(u32 j0 = 0; j0 < 256; j0++)
+    for(/*u16*/ u32 j0 = 0; j0 < 256; j0++)
     {
     //printf("j0 = %d\n", j0);
-    for(u32 j1 = 0; j1 < 256; j1++)
+    for(/*u16*/ u32 j1 = 0; j1 < 256; j1++)
     {
     //printf("j1 = %d\n", j1);
-    for(u32 j2 = 0; j2 < 256; j2++)
+    for(/*u16*/ u32 j2 = 0; j2 < 256; j2++)
     {
     //printf("j2 = %d\n", j2);
-    for(u32 j3 = 0; j3 < 256; j3++)
+    for(/*u16*/ u32 j3 = 0; j3 < 256; j3++)
     {
     //printf("j3 = %d\n", j3);
-    for(u32 j4 = 0; j4 < 256; j4++)
+    for(/*u16*/ u32 j4 = 0; j4 < 256; j4++)
     {
     //printf("j4 = %d\n", j4);
-    for(u32 j5 = 0; j5 < 256; j5++)
+    for(/*u16*/ u32 j5 = 0; j5 < 256; j5++)
     {
     //printf("j5 = %d\n", j5);
-    for(u32 j6 = 0; j6 < 256; j6++)
+    for(/*u16*/ u32 j6 = 0; j6 < 256; j6++)
     {
     //printf("j6 = %d\n", j6);
-    for(u32 j7 = 0; j7 < 256; j7++)
+    for(/*u16*/ u32 j7 = 0; j7 < 256; j7++)
     {
     //printf("j7 = %d\n", j7);
-    for(u32 j8 = 0; j8 < 256; j8++)
+    for(/*u16*/ u32 j8 = 0; j8 < 256; j8++)
     {
     //printf("j8 = %d\n", j8);
-    for(u32 j9 = 0; j9 < 256; j9++)
+    for(/*u16*/ u32 j9 = 0; j9 < 256; j9++)
     {
     //printf("j9 = %d\n", j9);
-    for(u32 j10 = 0; j10 < 256; j10++)
+    for(/*u16*/ u32 j10 = 0; j10 < 256; j10++)
     {
     //printf("j10 = %d\n", j10);
-    for(u32 j11 = 0; j11 < 256; j11++)
+    for(/*u16*/ u32 j11 = 0; j11 < 256; j11++)
     {
     //printf("j11 = %d\n", j11);
-    for(u32 j12 = 0; j12 < 256; j12++)
+    for(/*u16*/ u32 j12 = 0; j12 < 256; j12++)
     {
     //printf("j12 = %d\n", j12);
-    for(u32 j13 = 0; j13 < 256; j13++)
+    for(/*u16*/ u32 j13 = 0; j13 < 256; j13++)
     {
     //printf("j13 = %d\n", j13);
-    for(u32 j14 = 0; j14 < 256; j14++)
+    for(/*u16*/ u32 j14 = 0; j14 < 256; j14++)
     {
     //printf("j14 = %d\n", j14);
-    for(u32 j15 = 0; j15 < 256; j15++)
+    for(/*u16*/ u32 j15 = 0; j15 < 256; j15++)
     {
     //printf("j15 = %d\n", j15);
         demanded_input[0] = all_pairs[0][j0][0];
@@ -517,11 +516,11 @@ void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u
                     // printf("Input Found Number = ");
                     // printu128(iterration);
                     // printf(";\n");
-                    // printf("===================================================\n");
-                    // printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
-                    // print_dec(demanded_input, 32, 8, gen_mode);
-                    // printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
-                    // printf("===================================================\n");
+                    printf("===================================================\n");
+                    printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                    print_dec(demanded_input, 32, 8, gen_mode);
+                    printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                    printf("===================================================\n");
                 }
             }
             if(gen_mode == 'N' || gen_mode == 'A')
@@ -532,18 +531,21 @@ void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u
                     // printf("Input Found Number = ");
                     // printu128(iterration);
                     // printf(";\n");
-                    // print_dec(demanded_input, 32, 8, gen_mode);
+                    print_dec(demanded_input, 32, 8, gen_mode);
                 }
             }
             if(iterration == gen_input_num)
             {
-                printf("Itteration Number = ");
-                printu128(it_all);
-                printf(";\n");
+                // printf("Itteration Number = ");
+                // printu128(it_all);
+                // printf(";\n");
+                // printf("j0 = %d; j1 = %d; j2 = %d; j3 = %d; j4 = %d; j5 = %d; j6 = %d; j7 = %d;\n"
+                //        "j8 = %d; j9 = %d; j10 = %d; j11 = %d; j12 = %d; j13 = %d; j14 = %d; j15 = %d;\n",
+                //        j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15);
                 return;
             }
         }
-        it_all++;
+        //it_all++;
     }}}}}}}}}}}}}}}}
     return;
 }
@@ -586,10 +588,10 @@ int main(int argc, char* argv[])
     all_input_combinaisons(input_generated, target, gen_mode, gen_input_num);
     //print_dec(input_generated, 32, 8, gen_mode);
     
-    Forward(input_generated, output, confusion, diffusion);
+    Forward(input_generated, output);
     //print_dec(input, 32, 8);
     //printf("%d\n",Backward(input, output, 0));
-    //Forward(input, output, confusion, diffusion);
+    //Forward(input, output);
     //memcpy(output, input, 32);
     //print_dec(input, 32, 8);
     //Forward(input,output,confusion,diffusion);
