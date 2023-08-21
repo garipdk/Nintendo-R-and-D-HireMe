@@ -567,8 +567,83 @@ int compare(const void* num1, const void* num2) // comparing function
     }  
     return 0;  
 }
+bool is_special_xored(u32 xored)
+{
+    if(xored == 15  || xored == 17  || xored == 32  || xored == 62
+    || xored == 68  || xored == 90  || xored == 107 || xored == 117
+    || xored == 128 || xored == 158 || xored == 175 || xored == 177
+    || xored == 203 || xored == 213 || xored == 228 || xored == 250)
+        return true;
+    return false;
+}
 int main()
 {
+    u32 xored;
+    FILE *fptr = fopen("All_Xor_Possibilities.txt", "w");
+    if (fptr == NULL) {
+        printf("The file is not opened. The program will exit now\n");
+        exit(1);
+    }
+    for(/*u16*/ u32 j0 = 0; j0 < 256; j0++)
+    {
+    //printf("j0 = %d\n", j0);
+    for(/*u16*/ u32 j1 = 0; j1 < 256; j1++)
+    {
+    //printf("j1 = %d\n", j1);
+    for(/*u16*/ u32 j2 = 0; j2 < 256; j2++)
+    {
+    //printf("j2 = %d\n", j2);
+    for(/*u16*/ u32 j3 = 0; j3 < 256; j3++)
+    {
+    //printf("j3 = %d\n", j3);
+    for(/*u16*/ u32 j4 = 0; j4 < 256; j4++)
+    {
+    //printf("j4 = %d\n", j4);
+    for(/*u16*/ u32 j5 = 0; j5 < 256; j5++)
+    {
+    //printf("j5 = %d\n", j5);
+    for(/*u16*/ u32 j6 = 0; j6 < 256; j6++)
+    {
+    //printf("j6 = %d\n", j6);
+    for(/*u16*/ u32 j7 = 0; j7 < 256; j7++)
+    {
+    //printf("j7 = %d\n", j7);
+    for(/*u16*/ u32 j8 = 0; j8 < 256; j8++)
+    {
+    //printf("j8 = %d\n", j8);
+    for(/*u16*/ u32 j9 = 0; j9 < 256; j9++)
+    {
+    //printf("j9 = %d\n", j9);
+    for(/*u16*/ u32 j10 = 0; j10 < 256; j10++)
+    {
+    //printf("j10 = %d\n", j10);
+    for(/*u16*/ u32 j11 = 0; j11 < 256; j11++)
+    {
+    //printf("j11 = %d\n", j11);
+    for(/*u16*/ u32 j12 = 0; j12 < 256; j12++)
+    {
+    //printf("j12 = %d\n", j12);
+    for(/*u16*/ u32 j13 = 0; j13 < 256; j13++)
+    {
+    //printf("j13 = %d\n", j13);
+    for(/*u16*/ u32 j14 = 0; j14 < 256; j14++)
+    {
+        if((!is_special_xored(j0)) && (!is_special_xored(j1)) && (!is_special_xored(j2)) && (!is_special_xored(j3))
+        && (!is_special_xored(j4)) && (!is_special_xored(j5)) && (!is_special_xored(j6)) && (!is_special_xored(j7))
+        && (!is_special_xored(j8)) && (!is_special_xored(j9)) && (!is_special_xored(j10)) && (!is_special_xored(j11))
+        && (!is_special_xored(j12)) && (!is_special_xored(j13)) && (!is_special_xored(j14)))
+        {
+            xored = (((((((((((((j0^j1)^j2)^j3)^j4)^j5)^j6)^j7)^j8)^j9)^j10)^j11)^j12)^j13)^j14;
+            if(is_special_xored(xored))
+            {
+                fprintf(fptr, "XORED = %d\n", xored);
+                fprintf(fptr, "j0 = %d; j1 = %d; j2 = %d; j3 = %d; j4 = %d; j5 = %d; j6 = %d; j7 = %d;\n"
+                            "j8 = %d; j9 = %d; j10 = %d; j11 = %d; j12 = %d; j13 = %d; j14 = %d;\n",
+                            j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14);
+                fprintf(fptr, "===============================================================================\n");
+            }
+        }
+    }}}}}}}}}}}}}}}
     // print_extend_ascii();
     // return 1;
     /*
