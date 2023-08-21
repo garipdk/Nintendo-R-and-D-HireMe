@@ -681,7 +681,7 @@ Even fewer people have reached this final level. Congratulations to them!
 
 */
 
-int main(int argc, char* argv[])
+int main(/*int argc, char* argv[]*/)
 {
     #ifdef _OPENMP
         omp_set_num_threads(8);

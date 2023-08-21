@@ -578,6 +578,20 @@ bool is_special_xored(u32 xored)
 }
 int main()
 {
+    for(u32 size = 1; size <= 256; size++)
+    {
+        printf("SIZE = %d :\n", size);
+        u64 ks[16];
+        for (u8 l = 0; l < 16; l++)
+            ks[l]=0;
+        for (u32 i = 0; i < size; i++)
+            for (u32 j = 0; j < size; j++)
+                for (u8 l = 0; l < 16; l++)
+                    if((i + j) / 32 == l)
+                        ks[l]++;
+        printf("for L = %d -> k = %ld\n", 1, ks[1]);
+    }
+    return 1;
     u32 xored;
     FILE *fptr = fopen("All_Xor_Possibilities.txt", "w");
     if (fptr == NULL) {
