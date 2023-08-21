@@ -9,6 +9,7 @@
 #include <locale.h>
 #include <memory.h>
 #include <ctype.h>
+#include <omp.h>
 
 #define err_target "<target> Must be at least 16 chars long (the first 0x00 must be at least at the 16th char).\n"
 #define err_generate_mode "<Input_Generate_Mode> Can Be only 'A', 'C' or 'N'.\n"
@@ -261,6 +262,7 @@ void print_dec(u8 s[], u8 size, u8 nb_per_line, u8 gen_mode)
 
 void Forward(u8 input_[32], u8 output_[32])
 {
+    //#pragma omp parallel for schedule(static) default(shared)
     for(/*u16*/ u32 i=0;i<256;i++)
     {
         for(u8 j=0;j<32;j++)
@@ -272,18 +274,21 @@ void Forward(u8 input_[32], u8 output_[32])
             for(u8 k=0;k<32;k++)
                 input_[j]^=output_[k]*((diffusion[j]>>k)&1);
     }
+    // #pragma omp parallel for schedule(static) default(shared)
     for(u8 i=0;i<16;i++)
         output_[i]=confusion[input_[i*2]]^confusion[input_[i*2+1]+256];
 }
 
 bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
 {
-    u8 output_[32];
-    u8 found_num[32];
     if(i == 256)
         return false;
 
+    u8 output_[32];
+    u8 found_num[32];
+
     //printf("i == %d\n", i);
+    // #pragma omp parallel for schedule(static) default(shared)
     for(u8 j=0;j<32;j++)
     {
         output_[j]=0;
@@ -295,14 +300,16 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         || output_[j] == 203 || output_[j] == 213 || output_[j] == 228 || output_[j] == 250)
             return false;
     }
-
     u8 found_two_total = 0;
+
+    // #pragma omp parallel for schedule(static) default(shared) reduction(+:found_two_total)
     for(u8 j = 0; j < 32; j++)
     {
         found_num[j] = 0;
         for(/*u16*/ u32 k = 0; k < 256; k++)
             if(output_[j] == confusion[k])
                 found_num[j]++;
+        
         if(found_num[j]==2)
             found_two_total++;
     }
@@ -310,12 +317,14 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
     u8 found[found_two_total][2];
 
 
+    // #pragma omp parallel for schedule(dynamic) default(shared)
     for(u8 j = 0; j < found_two_total; j++)
     {
         found[j][0]=0;
         found[j][1]=0;
     }
     u8 num_found_two = 0;
+
     for(u8 j = 0; j < 32; j++)
     {
         if(found_num[j]==2)
@@ -323,18 +332,35 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             u8 num_found_two0 = 0;
             for(/*u16*/ u32 k = 0; k < 256; k++)
             {
+                if(num_found_two0==2)
+                    break;
                 if(output_[j] == confusion[k])
                 {
                     found[num_found_two][num_found_two0]=k;
-                    num_found_two0++;
+                        num_found_two0++;
                 }
             }
-            num_found_two++;
+                num_found_two++;
         }
+    }
+    // #pragma omp parallel for schedule(static) default(shared)
+    for(u8 j = 0; j < 32; j++)
+    {
         if(found_num[j]==1)
+        {
+            u8 omp_region_finished = 0;
+            // #pragma omp parallel for schedule(static) default(shared)
             for(/*u16*/ u32 k = 0; k < 256; k++)
+            {
+                if(omp_region_finished)
+                    break;
                 if(output_[j] == confusion[k])
+                {
                     demanded_input[j] = k;
+                    omp_region_finished++;
+                }
+            }
+        }
     }
 
     //printf("found_two_total = %d\n", (int) pow((double) 2, (double) found_two_total));
@@ -379,21 +405,23 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         Forward(demanded_input0, output0_);
         if(memcmp(output0_, target, 16)==0)
         {
-            //print_dec(demanded_input, 32, 8);
+            // printf("%s\n", output0_);
             return true;
         }
+        // print_dec(demanded_input0, 32, 8, 'A');
     }
     return false;
 }
 
 void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u128 gen_input_num)
 {
-    /*u16*/ u32 found;
     bool coherant;
     u8 all_pairs[16][256][2];
+
+    #pragma omp parallel for schedule(static) default(shared)
     for(u8 i = 0; i < 16; i++)
     {
-        found = 0;
+        /*u16*/ u32 found = 0;
         for(/*u16*/ u32 k = 0; k < 256; k++)
         {
             for(/*u16*/ u32 j = 256; j < 512; j++)
@@ -404,145 +432,227 @@ void all_input_combinaisons(u8 demanded_input[32], u8 target[16], u8 gen_mode, u
                     all_pairs[i][found][1] = j-256;
                     found++;
                 }
+                if(found==256)
+                    break;
             }
+            if(found==256)
+                break;
         }
     }
     u128 iterration = 0;
+    bool is_found = false;
     //u128 it_all = 0;
     //printf("All pairs computed!\n");
     for(/*u16*/ u32 j0 = 0; j0 < 256; j0++)
     {
+        if(is_found)
+            return;
     //printf("j0 = %d\n", j0);
     for(/*u16*/ u32 j1 = 0; j1 < 256; j1++)
     {
+        if(is_found)
+            return;
     //printf("j1 = %d\n", j1);
     for(/*u16*/ u32 j2 = 0; j2 < 256; j2++)
     {
+        if(is_found)
+            return;
     //printf("j2 = %d\n", j2);
     for(/*u16*/ u32 j3 = 0; j3 < 256; j3++)
     {
+        if(is_found)
+            return;
     //printf("j3 = %d\n", j3);
     for(/*u16*/ u32 j4 = 0; j4 < 256; j4++)
     {
+        if(is_found)
+            return;
     //printf("j4 = %d\n", j4);
     for(/*u16*/ u32 j5 = 0; j5 < 256; j5++)
     {
+        if(is_found)
+            return;
     //printf("j5 = %d\n", j5);
     for(/*u16*/ u32 j6 = 0; j6 < 256; j6++)
     {
+        if(is_found)
+            return;
     //printf("j6 = %d\n", j6);
     for(/*u16*/ u32 j7 = 0; j7 < 256; j7++)
     {
+        if(is_found)
+            return;
     //printf("j7 = %d\n", j7);
     for(/*u16*/ u32 j8 = 0; j8 < 256; j8++)
     {
+        if(is_found)
+            return;
     //printf("j8 = %d\n", j8);
     for(/*u16*/ u32 j9 = 0; j9 < 256; j9++)
     {
+        if(is_found)
+            return;
     //printf("j9 = %d\n", j9);
     for(/*u16*/ u32 j10 = 0; j10 < 256; j10++)
     {
+        if(is_found)
+            return;
     //printf("j10 = %d\n", j10);
     for(/*u16*/ u32 j11 = 0; j11 < 256; j11++)
     {
+        if(is_found)
+            return;
     //printf("j11 = %d\n", j11);
     for(/*u16*/ u32 j12 = 0; j12 < 256; j12++)
     {
+        if(is_found)
+            return;
     //printf("j12 = %d\n", j12);
     for(/*u16*/ u32 j13 = 0; j13 < 256; j13++)
     {
+        if(is_found)
+            return;
     //printf("j13 = %d\n", j13);
+    #pragma omp parallel for schedule(dynamic, 64) default(shared) num_threads(2)
     for(/*u16*/ u32 j14 = 0; j14 < 256; j14++)
     {
+        if(is_found)
+        #ifdef _OPENMP
+            continue;
+        #else
+            return;
+        #endif
     //printf("j14 = %d\n", j14);
+    #pragma omp parallel for schedule(dynamic, 42) default(shared) num_threads(3)
     for(/*u16*/ u32 j15 = 0; j15 < 256; j15++)
     {
+        // printf("t\n");
+        if(is_found)
+        #ifdef _OPENMP
+            continue;
+        #else
+            return;
+        #endif
     //printf("j15 = %d\n", j15);
-        demanded_input[0] = all_pairs[0][j0][0];
-        demanded_input[1] = all_pairs[0][j0][1];
+        
+        u8 demanded_input0[32];
+        demanded_input0[0] = all_pairs[0][j0][0];
+        demanded_input0[1] = all_pairs[0][j0][1];
 
-        demanded_input[2] = all_pairs[1][j1][0];
-        demanded_input[3] = all_pairs[1][j1][1];
+        demanded_input0[2] = all_pairs[1][j1][0];
+        demanded_input0[3] = all_pairs[1][j1][1];
 
-        demanded_input[4] = all_pairs[2][j2][0];
-        demanded_input[5] = all_pairs[2][j2][1];
+        demanded_input0[4] = all_pairs[2][j2][0];
+        demanded_input0[5] = all_pairs[2][j2][1];
 
-        demanded_input[6] = all_pairs[3][j3][0];
-        demanded_input[7] = all_pairs[3][j3][1];
+        demanded_input0[6] = all_pairs[3][j3][0];
+        demanded_input0[7] = all_pairs[3][j3][1];
 
-        demanded_input[8] = all_pairs[4][j4][0];
-        demanded_input[9] = all_pairs[4][j4][1];
+        demanded_input0[8] = all_pairs[4][j4][0];
+        demanded_input0[9] = all_pairs[4][j4][1];
 
-        demanded_input[10] = all_pairs[5][j5][0];
-        demanded_input[11] = all_pairs[5][j5][1];
+        demanded_input0[10] = all_pairs[5][j5][0];
+        demanded_input0[11] = all_pairs[5][j5][1];
 
-        demanded_input[12] = all_pairs[6][j6][0];
-        demanded_input[13] = all_pairs[6][j6][1];
+        demanded_input0[12] = all_pairs[6][j6][0];
+        demanded_input0[13] = all_pairs[6][j6][1];
 
-        demanded_input[14] = all_pairs[7][j7][0];
-        demanded_input[15] = all_pairs[7][j7][1];
+        demanded_input0[14] = all_pairs[7][j7][0];
+        demanded_input0[15] = all_pairs[7][j7][1];
 
-        demanded_input[16] = all_pairs[8][j8][0];
-        demanded_input[17] = all_pairs[8][j8][1];
+        demanded_input0[16] = all_pairs[8][j8][0];
+        demanded_input0[17] = all_pairs[8][j8][1];
 
-        demanded_input[18] = all_pairs[9][j9][0];
-        demanded_input[19] = all_pairs[9][j9][1];
+        demanded_input0[18] = all_pairs[9][j9][0];
+        demanded_input0[19] = all_pairs[9][j9][1];
 
-        demanded_input[20] = all_pairs[10][j10][0];
-        demanded_input[21] = all_pairs[10][j10][1];
+        demanded_input0[20] = all_pairs[10][j10][0];
+        demanded_input0[21] = all_pairs[10][j10][1];
 
-        demanded_input[22] = all_pairs[11][j11][0];
-        demanded_input[23] = all_pairs[11][j11][1];
+        demanded_input0[22] = all_pairs[11][j11][0];
+        demanded_input0[23] = all_pairs[11][j11][1];
 
-        demanded_input[24] = all_pairs[12][j12][0];
-        demanded_input[25] = all_pairs[12][j12][1];
+        demanded_input0[24] = all_pairs[12][j12][0];
+        demanded_input0[25] = all_pairs[12][j12][1];
 
-        demanded_input[26] = all_pairs[13][j13][0];
-        demanded_input[27] = all_pairs[13][j13][1];
+        demanded_input0[26] = all_pairs[13][j13][0];
+        demanded_input0[27] = all_pairs[13][j13][1];
 
-        demanded_input[28] = all_pairs[14][j14][0];
-        demanded_input[29] = all_pairs[14][j14][1];
+        demanded_input0[28] = all_pairs[14][j14][0];
+        demanded_input0[29] = all_pairs[14][j14][1];
 
-        demanded_input[30] = all_pairs[15][j15][0];
-        demanded_input[31] = all_pairs[15][j15][1];
-        if(Backward(demanded_input, target, 0))
+        demanded_input0[30] = all_pairs[15][j15][0];
+        demanded_input0[31] = all_pairs[15][j15][1];
+        if(Backward(demanded_input0, target, 0))
         {
-            coherant = coherant_string(demanded_input, 32);
+            coherant = coherant_string(demanded_input0, 32);
             if(gen_mode == 'C' || gen_mode == 'A')
             {
                 if(coherant)
                 {
-                    iterration++;
+                    #pragma omp critical
+                    {
+                        if(is_found == false)
+                        {
+                            iterration++;
+                            if(iterration == gen_input_num)
+                            {
+                                is_found = true;
+                                memcpy(demanded_input, demanded_input0, 32);
+                            }
+                        }
+                    }
                     // printf("Input Found Number = ");
                     // printu128(iterration);
                     // printf(";\n");
-                    printf("===================================================\n");
-                    printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
-                    print_dec(demanded_input, 32, 8, gen_mode);
-                    printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
-                    printf("===================================================\n");
+                    // printf("j0 = %d; j1 = %d; j2 = %d; j3 = %d; j4 = %d; j5 = %d; j6 = %d; j7 = %d;\n"
+                    //     "j8 = %d; j9 = %d; j10 = %d; j11 = %d; j12 = %d; j13 = %d; j14 = %d; j15 = %d;\n",
+                    //     j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15);
+                    // printf("===================================================\n");
+                    // printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                    // print_dec(demanded_input0, 32, 8, gen_mode);
+                    // printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                    // printf("===================================================\n");
+
+                    // if(is_found)
+                    // {
+                    //     printf("Itteration Number = ");
+                    //     printu128(it_all);
+                    //     printf(";\n");
+                    // }
                 }
             }
             if(gen_mode == 'N' || gen_mode == 'A')
             {
                 if(!coherant)
                 {
-                    iterration++;
+                    #pragma omp critical
+                    {
+                        if(is_found == false)
+                        {
+                            iterration++;
+                            if(iterration == gen_input_num)
+                            {
+                                is_found = true;
+                                memcpy(demanded_input, demanded_input0, 32);
+                            }
+                        }
+                    }
                     // printf("Input Found Number = ");
                     // printu128(iterration);
                     // printf(";\n");
-                    print_dec(demanded_input, 32, 8, gen_mode);
+                    // printf("j0 = %d; j1 = %d; j2 = %d; j3 = %d; j4 = %d; j5 = %d; j6 = %d; j7 = %d;\n"
+                    //     "j8 = %d; j9 = %d; j10 = %d; j11 = %d; j12 = %d; j13 = %d; j14 = %d; j15 = %d;\n",
+                    //     j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15);
+                    // print_dec(demanded_input0, 32, 8, gen_mode);
+                    
+                    // if(is_found)
+                    // {
+                    //     printf("Itteration Number = ");
+                    //     printu128(it_all);
+                    //     printf(";\n");
+                    // }
                 }
-            }
-            if(iterration == gen_input_num)
-            {
-                // printf("Itteration Number = ");
-                // printu128(it_all);
-                // printf(";\n");
-                // printf("j0 = %d; j1 = %d; j2 = %d; j3 = %d; j4 = %d; j5 = %d; j6 = %d; j7 = %d;\n"
-                //        "j8 = %d; j9 = %d; j10 = %d; j11 = %d; j12 = %d; j13 = %d; j14 = %d; j15 = %d;\n",
-                //        j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15);
-                return;
             }
         }
         //it_all++;
@@ -573,6 +683,9 @@ Even fewer people have reached this final level. Congratulations to them!
 
 int main(int argc, char* argv[])
 {
+    #ifdef _OPENMP
+        omp_set_num_threads(8);
+    #endif
     if(argc != 4)
     {
         printf(error_input);
@@ -589,7 +702,7 @@ int main(int argc, char* argv[])
     //print_dec(input_generated, 32, 8, gen_mode);
     
     Forward(input_generated, output);
-    //print_dec(input, 32, 8);
+    // print_dec(output, 32, 8, gen_mode);
     //printf("%d\n",Backward(input, output, 0));
     //Forward(input, output);
     //memcpy(output, input, 32);
