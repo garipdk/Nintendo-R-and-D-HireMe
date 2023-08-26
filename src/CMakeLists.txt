@@ -12,33 +12,37 @@ file(GLOB HIREME_SOURCES *.c)
 
 find_package(OpenMP)
 
-add_executable(HireMe HireMe_main.c "${HIREME_SOURCES}")
-target_link_libraries(HireMe m)
 
-add_executable(HireMe_dbg HireMe_main.c "${HIREME_SOURCES}")
-target_link_libraries(HireMe_dbg m)
 
 if(OpenMP_C_FOUND)
-  add_executable(HireMe_omp HireMe_main.c "${HIREME_SOURCES}")
-  target_link_libraries(HireMe_omp PRIVATE m OpenMP::OpenMP_C)
 
-  add_executable(HireMe_omp_dbg HireMe_main.c "${HIREME_SOURCES}")
-  target_link_libraries(HireMe_omp PRIVATE m OpenMP::OpenMP_C)
 endif()
 
 if(MSVC)
-  target_compile_options(HireMe PRIVATE /W4 /WX /Wno-unknown-pragmas)
+  add_executable(HireMe.exe HireMe_main.c "${HIREME_SOURCES}")
+  target_link_libraries(HireMe.exe m)
+  target_compile_options(HireMe.exe PRIVATE /W4 /WX /Wno-unknown-pragmas)
 
-  target_compile_options(HireMe_dbg PRIVATE /W4 /WX /Wno-unknown-pragmas /g)
+  add_executable(HireMe_dbg.exe HireMe_main.c "${HIREME_SOURCES}")
+  target_link_libraries(HireMe_dbg.exe m)
+  target_compile_options(HireMe_dbg.exe PRIVATE /W4 /WX /Wno-unknown-pragmas /g)
 
   if(OpenMP_C_FOUND)
-    target_compile_options(HireMe_omp PRIVATE /W4 /WX)
+    add_executable(HireMe_omp.exe HireMe_main.c "${HIREME_SOURCES}")
+    target_link_libraries(HireMe_omp.exe PRIVATE m OpenMP::OpenMP_C)
+    target_compile_options(HireMe_omp.exe PRIVATE /W4 /WX)
 
-    target_compile_options(HireMe_omp_dbg PRIVATE /W4 /WX/g)
+    add_executable(HireMe_omp_dbg.exe HireMe_main.c "${HIREME_SOURCES}")
+    target_link_libraries(HireMe_omp_dbg.exe PRIVATE m OpenMP::OpenMP_C)
+    target_compile_options(HireMe_omp_dbg.exe PRIVATE /W4 /WX/g)
   endif()
 else()
+  add_executable(HireMe HireMe_main.c "${HIREME_SOURCES}")
+  target_link_libraries(HireMe m)
   target_compile_options(HireMe PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas)
 
+  add_executable(HireMe_dbg HireMe_main.c "${HIREME_SOURCES}")
+  target_link_libraries(HireMe_dbg m)
   target_compile_options(HireMe_dbg PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas -g)
 
   add_executable(HireMe_mn HireMe_main.c "${HIREME_SOURCES}")
@@ -64,8 +68,12 @@ else()
 
 
   if(OpenMP_C_FOUND)
+    add_executable(HireMe_omp HireMe_main.c "${HIREME_SOURCES}")
+    target_link_libraries(HireMe_omp PRIVATE m OpenMP::OpenMP_C)
     target_compile_options(HireMe_omp PRIVATE -Wall -Wextra -Werror)
     
+    add_executable(HireMe_omp_dbg HireMe_main.c "${HIREME_SOURCES}")
+    target_link_libraries(HireMe_omp_dbg PRIVATE m OpenMP::OpenMP_C)
     target_compile_options(HireMe_omp_dbg PRIVATE -Wall -Wextra -Werror -g)
 
     add_executable(HireMe_mn_omp HireMe_main.c "${HIREME_SOURCES}")
