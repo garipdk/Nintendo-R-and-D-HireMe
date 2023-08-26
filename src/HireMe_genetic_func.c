@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include "HireMe_u8.h"
 #include "HireMe_u32.h"
@@ -9,6 +11,46 @@
 #include "HireMe_sorting.h"
 #include "HireMe_prints.h"
 #include "HireMe_genetic_func.h"
+u8 Levenshtein(u8 *string1, u8 string2[16])
+{
+    u8 w = 1, s = 1, a = 1, d = 1;
+	u8 len1 = 16, len2 = 16;
+	u8 r0[len2+1];
+    u8 r1[len2+1];
+    u8 r2[len2+1];
+    u8 *row0, *row1, *row2;
+    row0 = r0;
+    row1 = r1;
+    row2 = r2;
+	u8 i, j;
+	for (j = 0; j <= len2; j++)
+		row1[j] = j * a;
+	for (i = 0; i < len1; i++) {
+		u8 *dummy;
+		row2[0] = (i + 1) * d;
+		for (j = 0; j < len2; j++) {
+			/* substitution */
+			row2[j + 1] = row1[j] + s * (string1[i] != string2[j]);
+			/* swap */
+			if (i > 0 && j > 0 && string1[i - 1] == string2[j] &&
+					string1[i] == string2[j - 1] &&
+					row2[j + 1] > row0[j - 1] + w)
+				row2[j + 1] = row0[j - 1] + w;
+			/* deletion */
+			if (row2[j + 1] > row1[j + 1] + d)
+				row2[j + 1] = row1[j + 1] + d;
+			/* insertion */
+			if (row2[j + 1] > row2[j] + a)
+				row2[j + 1] = row2[j] + a;
+		}
+		dummy = row0;
+		row0 = row1;
+		row1 = row2;
+		row2 = dummy;
+	}
+
+	return row1[len2];
+}
 
 u8 HammingDistBits(u8 *str, u8 target[16])
 {
@@ -21,10 +63,38 @@ u8 HammingDistBits(u8 *str, u8 target[16])
     return count;
 }
 
+u8 HammingDist(u8 *str, u8 target[16])
+{
+    u8 count = 0;
+    for(u8 i = 0; i < 16; i++)
+        if(str[i] != target[i])
+            count++;
+    
+    return count;
+}
+u8 Score(u8 *str1, u8 target[16], u8 score_func)
+{
+    u8 ret;
+    switch(score_func)
+    {
+        case 0:
+            ret = HammingDistBits(str1, target);
+            break;
+        case 1:
+            ret = HammingDist(str1, target);
+            break;
+        case 2:
+            ret = Levenshtein(str1, target);
+            break;
+        default:
+            ret = HammingDistBits(str1, target);
+    }
+    return ret;
+}
 void FindScore(u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
 {
     for(u32 i = 0; i < pool_size; i++)
-        score_pool[i] = HammingDistBits(&forward_pool[i*32], target);
+        score_pool[i] = Score(&forward_pool[i*32], target, 0);
 }
 
 void PoolSort(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
@@ -60,17 +130,54 @@ void PoolReplaceSames(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size,
                 urandomu8Str32(&pool[j*32], mystate);
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
-
-void Reproduce(u8 *parent1, u8 *parent2, u8 *child)
+u8 ReproduceOneu8(u8 p1, u8 p2, u8 strategy)
 {
-    for(u8 i = 0; i < 32; i++)
-        child[i] = ((int) (parent1[i] + parent2[i])) / 2;
+    u8 ret;
+
+    switch(strategy)
+    {
+        case 0:
+            ret = ((u32)p1 + (u32)p2) / 2;
+            break;
+        case 1:
+            ret = p1 ^ p2;
+            break;
+        case 2:
+            ret = p1 & p2;
+            break;
+        case 3:
+            ret = p1 | p2;
+            break;
+        case 4:
+            ret = ~(p1 ^ p2);
+            break;
+        case 5:
+            ret = ~(p1 & p2);
+            break;
+        case 6:
+            ret = ~(p1 | p2);
+            break;
+        default:
+            ret = ((u32)p1 + (u32)p2) / 2;
+            break;
+    }
+    return ret;
 }
 
-void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16])
+void Reproduce(u8 *parent1, u8 *parent2, u8 *child, u32 *mystate)
 {
+    for(u8 i = 0; i < 32; i++)
+        child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7, mystate));
+}
+
+void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16], u32 *mystate)
+{
+    u32 r;
     for(long int i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
-        Reproduce(&pool[i*32], &pool[(i+1)*32], &pool[child*32]);
+    {
+        while(i == (r=urandomu32Mod(pool_size, mystate)));
+        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], mystate);
+    }
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
@@ -83,7 +190,7 @@ void RandomMutations(u8 *parent, u8 *child, u32 *mystate)
 
 void PoolRandomMutations(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
 {
-    u32 number_of_rand = urandomu32Mod(pool_size/2, mystate);
+    u32 number_of_rand = urandomu32Mod(pool_size, mystate);
     for(u32 i = pool_size - 1; i > pool_size - 1 - number_of_rand; i--)
         RandomMutations(&pool[urandomu32Mod(number_of_rand, mystate)*32], &pool[i*32], mystate);
 
@@ -103,10 +210,10 @@ void printScores(u8 *score_pool, u32 pool_size, u128 iter)
         printf("score[%d] = %d;\n", i, score_pool[i]);
 }
 
-u8 CountScore0(u8 *score_pool, u32 pool_size)
+u32 CountScore0(u8 *score_pool, u32 pool_size)
 {
-    u8 num_score_0 = 0;
-    for(u8 i = 0; i < pool_size; i++)
+    u32 num_score_0 = 0;
+    for(u32 i = 0; i < pool_size; i++)
         if(score_pool[i] == 0)
             num_score_0++;
         else
