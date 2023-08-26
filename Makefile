@@ -41,22 +41,22 @@ HireMe_make_O3_mn_omp: clean_HireMe_make_O3_mn_omp
 
 
 HireMe_make_Base: clean_HireMe_make_Base
-	gcc -Wall -Werror -Wextra HireMe_make_Base.c -o build/HireMe_make_Base
+	gcc -Wall -Werror -Wextra HireMe_Base.c -o build/HireMe_make_Base
 
 HireMe_make_Base_mn: clean_HireMe_make_Base_mn
-	gcc -Wall -Werror -Wextra HireMe_make_Base.c -march=native -o build/HireMe_make_Base_mn
+	gcc -Wall -Werror -Wextra HireMe_Base.c -march=native -o build/HireMe_make_Base_mn
 
 HireMe_make_Base_Ofast: clean_HireMe_make_Base_Ofast
-	gcc -Wall -Werror -Wextra HireMe_make_Base.c -Ofast -o build/HireMe_make_Base_Ofast
+	gcc -Wall -Werror -Wextra HireMe_Base.c -Ofast -o build/HireMe_make_Base_Ofast
 
 HireMe_make_Base_O3: clean_HireMe_make_Base_O3
-	gcc -Wall -Werror -Wextra HireMe_make_Base.c -O3 -o build/HireMe_make_Base_O3
+	gcc -Wall -Werror -Wextra HireMe_Base.c -O3 -o build/HireMe_make_Base_O3
 
 HireMe_make_Base_Ofast_mn: clean_HireMe_make_Base_Ofast_mn
-	gcc -Wall -Werror -Wextra HireMe_make_Base.c -Ofast -march=native -o build/HireMe_make_Base_Ofast_mn
+	gcc -Wall -Werror -Wextra HireMe_Base.c -Ofast -march=native -o build/HireMe_make_Base_Ofast_mn
 
 HireMe_make_Base_O3_mn: clean_HireMe_make_Base_O3_mn
-	gcc -Wall -Werror -Wextra HireMe_make_Base.c -O3 -march=native -o build/HireMe_make_Base_O3_mn
+	gcc -Wall -Werror -Wextra HireMe_Base.c -O3 -march=native -o build/HireMe_make_Base_O3_mn
 
 
 
