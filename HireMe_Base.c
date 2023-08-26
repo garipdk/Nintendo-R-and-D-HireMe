@@ -1,4 +1,7 @@
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 typedef unsigned char u8;
 typedef unsigned int u32;
@@ -44,57 +47,36 @@ u32 diffusion[32]={
 0x81b46cf2,0x92dca516,0x24a95b3c,0x4852b679,0x184bc62f,0x29cd5a61,0x429ab5c3,0x84256b97};
 
 u8 input[32]={
-//change only this :
+//You can only change this :
 0x66,0xd5,0x4e,0x28,0x5f,0xff,0x6b,0x53,0xac,0x3b,0x34,0x14,0xb5,0x3c,0xb2,0xc6,
 0xa4,0x85,0x1e,0x0d,0x86,0xc7,0x4f,0xba,0x75,0x5e,0xcb,0xc3,0x6e,0x48,0x79,0x8f
 //
 };
 
-void Forward(u8 c[32],u8 d[32],u8 s[512],u32 p[32])
+void Forward(u8 input_[32],u8 output_[32])
 {
     for(u32 i=0;i<256;i++)
     {
         for(u8 j=0;j<32;j++)
         {
-            d[j]=s[c[j]];
-            c[j]=0;
+            output_[j]=confusion[input_[j]];
+            input_[j]=0;
         }
 
         for(u8 j=0;j<32;j++)
             for(u8 k=0;k<32;k++)
-                c[j]^=d[k]*((p[j]>>k)&1);
+                input_[j]^=output_[k]*((diffusion[j]>>k)&1);
     }
     for(u8 i=0;i<16;i++)
-        d[i]=s[c[i*2]]^s[c[i*2+1]+256];
+        output_[i]=confusion[input_[i*2]]^confusion[input_[i*2+1]+256];
 }
-
-/*
-The solutions to this challenge belong to different levels :
-
-Level 1 : an iterative algorithm which typically takes more than a second to
-find a solution (for any given output). 
-
-Most people stop here, which is fine, but if you want to go further, there is :
-
-Level 2 : a non-iterative algorithm which typically takes less than a
-millisecond to find a solution (for any given output).
-
-Few people have reached this level. But if you want to beat it completely,
-there's yet another castle...
-
-Level 3 : an algorithm which can provide any of the 2^128 solutions (for any
-given output).
-
-Even fewer people have reached this final level. Congratulations to them!
-
-*/
 
 int main(/*int argc, char* argv[]*/)
 {
-    u8 target[]="Hire me!!!!!!!!";
+    u8 target[16] = "Hire me!!!!!!!!";
     u8 output[32];
 
-    Forward(input,output,confusion,diffusion);
-
-    return memcmp(output,target,16); // => contact apply(at)nerd.nintendo.com
+    Forward(input, output);
+    
+    return memcmp(output, target, 32); 
 }
