@@ -32,58 +32,20 @@ void SolverAllRand(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen
         #else
             return;
         #endif
-        u32 mystate;
         #ifdef _OPENMP
-            mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
+        u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
         u8 demanded_input0[32];
-        demanded_input0[0] = all_pairs[0][urandomu8(&mystate)][0];
-        demanded_input0[1] = all_pairs[0][urandomu8(&mystate)][1];
-
-        demanded_input0[2] = all_pairs[1][urandomu8(&mystate)][0];
-        demanded_input0[3] = all_pairs[1][urandomu8(&mystate)][1];
-
-        demanded_input0[4] = all_pairs[2][urandomu8(&mystate)][0];
-        demanded_input0[5] = all_pairs[2][urandomu8(&mystate)][1];
-
-        demanded_input0[6] = all_pairs[3][urandomu8(&mystate)][0];
-        demanded_input0[7] = all_pairs[3][urandomu8(&mystate)][1];
-
-        demanded_input0[8] = all_pairs[4][urandomu8(&mystate)][0];
-        demanded_input0[9] = all_pairs[4][urandomu8(&mystate)][1];
-
-        demanded_input0[10] = all_pairs[5][urandomu8(&mystate)][0];
-        demanded_input0[11] = all_pairs[5][urandomu8(&mystate)][1];
-
-        demanded_input0[12] = all_pairs[6][urandomu8(&mystate)][0];
-        demanded_input0[13] = all_pairs[6][urandomu8(&mystate)][1];
-
-        demanded_input0[14] = all_pairs[7][urandomu8(&mystate)][0];
-        demanded_input0[15] = all_pairs[7][urandomu8(&mystate)][1];
-
-        demanded_input0[16] = all_pairs[8][urandomu8(&mystate)][0];
-        demanded_input0[17] = all_pairs[8][urandomu8(&mystate)][1];
-
-        demanded_input0[18] = all_pairs[9][urandomu8(&mystate)][0];
-        demanded_input0[19] = all_pairs[9][urandomu8(&mystate)][1];
-
-        demanded_input0[20] = all_pairs[10][urandomu8(&mystate)][0];
-        demanded_input0[21] = all_pairs[10][urandomu8(&mystate)][1];
-
-        demanded_input0[22] = all_pairs[11][urandomu8(&mystate)][0];
-        demanded_input0[23] = all_pairs[11][urandomu8(&mystate)][1];
-
-        demanded_input0[24] = all_pairs[12][urandomu8(&mystate)][0];
-        demanded_input0[25] = all_pairs[12][urandomu8(&mystate)][1];
-
-        demanded_input0[26] = all_pairs[13][urandomu8(&mystate)][0];
-        demanded_input0[27] = all_pairs[13][urandomu8(&mystate)][1];
-
-        demanded_input0[28] = all_pairs[14][urandomu8(&mystate)][0];
-        demanded_input0[29] = all_pairs[14][urandomu8(&mystate)][1];
-
-        demanded_input0[30] = all_pairs[15][urandomu8(&mystate)][0];
-        demanded_input0[31] = all_pairs[15][urandomu8(&mystate)][1];
+        for(u8 i = 0; i < 16; i++)
+        {
+            #ifdef _OPENMP
+            demanded_input0[i*2] = all_pairs[i][urandomu8(&mystate)][0];
+            demanded_input0[i*2+1] = all_pairs[i][urandomu8(&mystate)][1];
+            #else
+            demanded_input0[i*2] = all_pairs[i][urandomu8()][0];
+            demanded_input0[i*2+1] = all_pairs[i][urandomu8()][1];
+            #endif
+        }
         if(Backward(demanded_input0, target, 0))
         {
             #pragma omp critical

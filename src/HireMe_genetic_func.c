@@ -108,26 +108,50 @@ void PoolSort(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 targ
 
 }
 
+#ifdef _OPENMP
 void PoolInit(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
+#else
+void PoolInit(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
+#endif
 {
     for(u32 i = 0; i < pool_size; i++)
+        #ifdef _OPENMP
         urandomu8Str32(&pool[i*32], mystate);
+        #else
+        urandomu8Str32(&pool[i*32]);
+        #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
+#ifdef _OPENMP
 void PoolReplaceBadests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 elminiation_size, u8 target[16], u32 *mystate)
+#else
+void PoolReplaceBadests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 elminiation_size, u8 target[16])
+#endif
 {
     for(u32 i = pool_size - elminiation_size; i < pool_size; i++)
+        #ifdef _OPENMP
         urandomu8Str32(&pool[i*32], mystate);
+        #else
+        urandomu8Str32(&pool[i*32]);
+        #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
+#ifdef _OPENMP
 void PoolReplaceSames(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
+#else
+void PoolReplaceSames(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
+#endif
 {
     for(u32 i = 0; i < pool_size; i++)
         for(u32 j = 0; j < i; j++)
             if(memcmp(&pool[i*32], &pool[j*32], 32) == 0)
+                #ifdef _OPENMP
                 urandomu8Str32(&pool[j*32], mystate);
+                #else
+                urandomu8Str32(&pool[j*32]);
+                #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 u8 ReproduceOneu8(u8 p1, u8 p2, u8 strategy)
@@ -164,35 +188,73 @@ u8 ReproduceOneu8(u8 p1, u8 p2, u8 strategy)
     return ret;
 }
 
+#ifdef _OPENMP
 void Reproduce(u8 *parent1, u8 *parent2, u8 *child, u32 *mystate)
+#else
+void Reproduce(u8 *parent1, u8 *parent2, u8 *child)
+#endif
 {
     for(u8 i = 0; i < 32; i++)
+        #ifdef _OPENMP
         child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7, mystate));
+        #else
+        child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7));
+        #endif
 }
 
+#ifdef _OPENMP
 void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16], u32 *mystate)
+#else
+void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16])
+#endif
 {
     u32 r;
     for(long int i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
     {
-        while(i == (r=urandomu32Mod(pool_size, mystate)));
+        #ifdef _OPENMP
+        while(i == (r=urandomu32Mod(pool_size/2, mystate)));
         Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], mystate);
+        #else
+        while(i == (r=urandomu32Mod(pool_size/2)));
+        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32]);
+        #endif
     }
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
+#ifdef _OPENMP
 void RandomMutations(u8 *parent, u8 *child, u32 *mystate)
+#else
+void RandomMutations(u8 *parent, u8 *child)
+#endif
 {
     memmove(child, parent, 32);
+    #ifdef _OPENMP
     // bitsetclear(child[urandomu8Mod(32, mystate)], urandomu8Mod(8, mystate), urandomu8Mod(2, mystate));
     bitflip(child[urandomu8Mod(32, mystate)], urandomu8Mod(8, mystate));
+    #else
+    // bitsetclear(child[urandomu8Mod(32)], urandomu8Mod(8), urandomu8Mod(2));
+    bitflip(child[urandomu8Mod(32)], urandomu8Mod(8));
+    #endif
 }
 
+#ifdef _OPENMP
 void PoolRandomMutations(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
+#else
+void PoolRandomMutations(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
+#endif
 {
+    #ifdef _OPENMP
     u32 number_of_rand = urandomu32Mod(pool_size, mystate);
+    #else
+    u32 number_of_rand = urandomu32Mod(pool_size);
+    #endif
     for(u32 i = pool_size - 1; i > pool_size - 1 - number_of_rand; i--)
+        #ifdef _OPENMP
         RandomMutations(&pool[urandomu32Mod(number_of_rand, mystate)*32], &pool[i*32], mystate);
+        #else
+        RandomMutations(&pool[urandomu32Mod(number_of_rand)*32], &pool[i*32]);
+        #endif
 
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }

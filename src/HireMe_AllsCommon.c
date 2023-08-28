@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include "HireMe_u8.h"
 #include "HireMe_u32.h"
 #include "HireMe_u64.h"
@@ -94,7 +95,11 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             }
         }
     }
-
+    if(found_two_total >= 64)
+    {
+        printf("MAIS VOILAAAAAAAA !!!!!\n");
+        exit(1);
+    }
     //printf("found_two_total = %d\n", (int) pow((double) 2, (double) found_two_total));
     u64 power = pow((double) 2, (double) found_two_total);
     u8 demanded_input0[32];

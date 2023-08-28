@@ -49,7 +49,11 @@ void printDetail(u8 *s, u8 size, u8 nb_per_line, u8 print_mode)
     if(print_mode == 'A')
     {
         if(size>1)
-            printf("%s\n",s);
+        {
+            for(u8 i = 0; i < size; i++)
+                printf("%c",s[i]);
+            printf("\n");
+        }
         for(u8 i = 0; i < size; i++)
         {
             printf("%03d", s[i]);
