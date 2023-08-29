@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.9.6)
 
 project(HireMe LANGUAGES C)
+
 #set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -10,32 +12,7 @@ set(CMAKE_C_COMPILER gcc)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 file(GLOB HIREME_SOURCES *.c)
 
-find_package(OpenMP)
-
-
-
-if(OpenMP_C_FOUND)
-
-endif()
-
 if(MSVC)
-  add_executable(HireMe.exe HireMe_main.c "${HIREME_SOURCES}")
-  target_link_libraries(HireMe.exe m)
-  target_compile_options(HireMe.exe PRIVATE /W4 /WX /Wno-unknown-pragmas)
-
-  add_executable(HireMe_dbg.exe HireMe_main.c "${HIREME_SOURCES}")
-  target_link_libraries(HireMe_dbg.exe m)
-  target_compile_options(HireMe_dbg.exe PRIVATE /W4 /WX /Wno-unknown-pragmas /g)
-
-  if(OpenMP_C_FOUND)
-    add_executable(HireMe_omp.exe HireMe_main.c "${HIREME_SOURCES}")
-    target_link_libraries(HireMe_omp.exe PRIVATE m OpenMP::OpenMP_C)
-    target_compile_options(HireMe_omp.exe PRIVATE /W4 /WX)
-
-    add_executable(HireMe_omp_dbg.exe HireMe_main.c "${HIREME_SOURCES}")
-    target_link_libraries(HireMe_omp_dbg.exe PRIVATE m OpenMP::OpenMP_C)
-    target_compile_options(HireMe_omp_dbg.exe PRIVATE /W4 /WX/g)
-  endif()
 else()
   add_executable(HireMe HireMe_main.c "${HIREME_SOURCES}")
   target_link_libraries(HireMe m)
@@ -66,6 +43,7 @@ else()
   target_link_libraries(HireMe_O3_mn m)
   target_compile_options(HireMe_O3_mn PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas -O3 -march=native)
 
+  find_package(OpenMP)
 
   if(OpenMP_C_FOUND)
     add_executable(HireMe_omp HireMe_main.c "${HIREME_SOURCES}")

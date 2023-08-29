@@ -16,7 +16,7 @@ There is instructions on how to build and launch this project
 ## Compile
 
 
-The project is compilable with two differant ways :
+The project is compilable with two differant ways on unix systems :
 
 
 ### CMAKELIST.TXT
@@ -35,7 +35,6 @@ where *target_make* is one of :
 
 ### MAKEFILE
 
-(Not Windows compatible)  
 ```make <target_make>```
 
 where *target_make* is one of :  
