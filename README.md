@@ -26,12 +26,11 @@ The project is compilable with two differant ways on unix systems :
 ```make <target_cmake>```
 
 where *target_make* is one of :  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make HireMe_make_mn HireMe_make_Ofast HireMe_make_O3  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Ofast_mn HireMe_make_O3_mn HireMe_make_omp  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_mn_omp HireMe_make_Ofast_omp HireMe_make_O3_omp  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Ofast_mn_omp HireMe_make_O3_mn_omp HireMe_make_Base  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Base_mn HireMe_make_Base_Ofast HireMe_make_Base_O3  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Base_Ofast_mn HireMe_make_Base_O3_mn
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe HireMe_mn HireMe_Ofast HireMe_O3  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_Ofast_mn HireMe_O3_mn HireMe_release  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_omp HireMe_mn_omp HireMe_Ofast_omp  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_O3_omp HireMe_Ofast_mn_omp HireMe_O3_mn_omp  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_release_omp
 
 ### MAKEFILE
 
@@ -39,11 +38,12 @@ where *target_make* is one of :
 
 where *target_make* is one of :  
 &nbsp;&nbsp;&nbsp;&nbsp;HireMe_make HireMe_make_mn HireMe_make_Ofast HireMe_make_O3  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Ofast_mn HireMe_make_O3_mn HireMe_make_omp  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_mn_omp HireMe_make_Ofast_omp HireMe_make_O3_omp  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Ofast_mn_omp HireMe_make_O3_mn_omp HireMe_make_Base  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Base_mn HireMe_make_Base_Ofast HireMe_make_Base_O3  
-&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Base_Ofast_mn HireMe_make_Base_O3_mn
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Ofast_mn HireMe_make_O3_mn HireMe_make_release  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_omp HireMe_make_mn_omp HireMe_make_Ofast_omp  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_O3_omp HireMe_make_Ofast_mn_omp HireMe_make_O3_mn_omp  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_release_omp HireMe_make_Base HireMe_make_Base_mn    
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Base_Ofast HireMe_make_Base_O3 HireMe_make_Base_Ofast_mn  
+&nbsp;&nbsp;&nbsp;&nbsp;HireMe_make_Base_O3_mn
 
 
 ### LEXIC
