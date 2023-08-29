@@ -69,7 +69,7 @@ Currently the only true solver working is the **ALLIT** (**BASE** works too but 
 ### BASE
 
 The command must be executed like so :  
-&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/target BASE <Print_Mode> <input>```  
+&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/exec BASE <Print_Mode> <input>```  
 Where :  
 *   *Print_Mode* Can Be only one of the following :  
 *   *   A : All.  
@@ -81,7 +81,7 @@ Where :
 ### ALLIT SOLVER
 
 The command must be executed like so :  
-&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/target ALLIT <Print_Mode> <target> <number_of_input>```  
+&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/exec ALLIT <Print_Mode> <target> <number_of_input>```  
 Where :  
 *   *Print_Mode* Can Be only one of the following :  
 *   *   A : All.  
@@ -94,7 +94,7 @@ Where :
 ### ALLRAND SOLVER
 
 The command must be executed like so :  
-&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/target ALLRAND <Print_Mode> <target> <number_of_input>```  
+&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/exec ALLRAND <Print_Mode> <target> <number_of_input>```  
 Where :  
 *   *Print_Mode* Can Be only one of the following :  
 *   *   A : All.  
@@ -107,7 +107,7 @@ Where :
 ### GENETIC SOLVER
 
 The command must be executed like so :  
-&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/target GENETIC <Print_Mode> <target> <pool_size> <number_of_input> <elimination_size> <reproduce_size>```  
+&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/exec GENETIC <Print_Mode> <target> <pool_size> <number_of_input> <elimination_size> <reproduce_size>```  
 Where :  
 *   *Print_Mode* Can Be only one of the following :  
 *   *   A : All.  
@@ -123,7 +123,7 @@ Where :
 ### RAND SOLVER
 
 The command must be executed like so :  
-&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/target RAND <Print_Mode> <target>```  
+&nbsp;&nbsp;&nbsp;&nbsp;```./path/to/exec RAND <Print_Mode> <target>```  
 Where :  
 * Print_Mode Can Be only one of the following :  
 *   *   A : All.  
