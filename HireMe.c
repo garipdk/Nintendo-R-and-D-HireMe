@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <math.h>
 #include <ctype.h>
 #include <time.h>
 #include <omp.h>
@@ -664,7 +663,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         exit(1);
     }
     //printf("found_two_total = %d\n", (int) pow((double) 2, (double) found_two_total));
-    u64 power = pow((double) 2, (double) found_two_total);
+    u64 power = 1 << found_two_total;
     u8 demanded_input0[32];
     if(power>1)
     {
