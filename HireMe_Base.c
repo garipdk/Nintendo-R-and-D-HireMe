@@ -75,5 +75,5 @@ int main(/*int argc, char* argv[]*/)
 
     Forward(input, output);
     
-    return memcmp(output, target, 32); 
+    return memcmp(output, target, 16); 
 }
