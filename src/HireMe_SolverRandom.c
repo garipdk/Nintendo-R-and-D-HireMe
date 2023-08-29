@@ -33,8 +33,8 @@ void SolverRandom(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_
         u8 demanded_input0[32];
         #ifdef _OPENMP
         urandomu8Str32(demanded_input0, &mystate);
-        urandomu8Str32(demanded_input0);
         #else
+        urandomu8Str32(demanded_input0);
         #endif
         u8 output_[32];
         SimplifiedForward(demanded_input0, output_);

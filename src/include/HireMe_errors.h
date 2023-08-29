@@ -10,7 +10,7 @@
     "\t'ALLRAND': same as 'ALL IT' but the the input possible at the end of Forward is chosen randomly.\n"\
     "\t'GENETIC' : a gentic implemantation with selection/reproduction/mutation/regular random input.\n"\
     "\t'RAND' : a totaly random implemantation -> each itteration a random input is created and tested with Forward.\n"\
-    "Currently the only true solver working is the 'ALLIT' ('BASE' works too but it is not a solver).\n"\
+    "Currently the only true solver working is the 'ALLIT' ('BASE' somewhat works too but it is not a solver).\n"\
     )
 #define error_base (\
     "The command must be executed like so :\n"\
