@@ -11,6 +11,7 @@
 #include "HireMe_sorting.h"
 #include "HireMe_prints.h"
 #include "HireMe_genetic_func.h"
+
 u8 Levenshtein(u8 *string1, u8 string2[16])
 {
     u8 w = 1, s = 1, a = 1, d = 1;
@@ -208,8 +209,9 @@ void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_siz
 void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16])
 #endif
 {
-    u32 r;
-    for(long int i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
+    long int child;
+    u32 r, i;
+    for(i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
     {
         #ifdef _OPENMP
         while(i == (r=urandomu32Mod(pool_size/2, mystate)));
