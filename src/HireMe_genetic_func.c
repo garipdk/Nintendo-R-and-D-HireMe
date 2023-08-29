@@ -100,13 +100,16 @@ void FindScore(u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
 
 void PoolSort(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
 {
+    u8 dummy[32];
     for(u32 i = 0; i < pool_size; i++)
-        SimplifiedForward(&pool[i*32], &forward_pool[i*32]);
-    
+    {
+        for(u8 j = 0; j < 32; j++)
+            dummy[j] = pool[(i*32)+j];
+        SimplifiedForward(dummy, &forward_pool[i*32]);
+    }
     FindScore(forward_pool, score_pool, pool_size, target);
     
     SelectionSort(score_pool, pool, pool_size);
-
 }
 
 #ifdef _OPENMP
@@ -155,6 +158,7 @@ void PoolReplaceSames(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size,
                 #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
+
 u8 ReproduceOneu8(u8 p1, u8 p2, u8 strategy)
 {
     u8 ret;
@@ -189,18 +193,10 @@ u8 ReproduceOneu8(u8 p1, u8 p2, u8 strategy)
     return ret;
 }
 
-#ifdef _OPENMP
-void Reproduce(u8 *parent1, u8 *parent2, u8 *child, u32 *mystate)
-#else
-void Reproduce(u8 *parent1, u8 *parent2, u8 *child)
-#endif
+void Reproduce(u8 *parent1, u8 *parent2, u8 *child, u8 r)
 {
     for(u8 i = 0; i < 32; i++)
-        #ifdef _OPENMP
-        child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7, mystate));
-        #else
-        child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7));
-        #endif
+        child[i] = ReproduceOneu8(parent1[i], parent2[i], r);
 }
 
 #ifdef _OPENMP
@@ -211,17 +207,22 @@ void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_siz
 {
     long int child;
     u32 r, i;
+    static u8 rand = 0;
+    static u8 last_min = 128;
     for(i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
     {
         #ifdef _OPENMP
         while(i == (r=urandomu32Mod(pool_size/2, mystate)));
-        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], mystate);
         #else
         while(i == (r=urandomu32Mod(pool_size/2)));
-        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32]);
         #endif
+        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], rand);
     }
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
+    if(score_pool[0] < last_min)
+        last_min = score_pool[0];
+    else
+        rand = (rand + 1) % 7;
 }
 
 #ifdef _OPENMP
@@ -230,7 +231,8 @@ void RandomMutations(u8 *parent, u8 *child, u32 *mystate)
 void RandomMutations(u8 *parent, u8 *child)
 #endif
 {
-    memmove(child, parent, 32);
+    for(u8 i = 0; i < 32; i++)
+        child[i] = parent[i];
     #ifdef _OPENMP
     // bitsetclear(child[urandomu8Mod(32, mystate)], urandomu8Mod(8, mystate), urandomu8Mod(2, mystate));
     bitflip(child[urandomu8Mod(32, mystate)], urandomu8Mod(8, mystate));
@@ -247,9 +249,9 @@ void PoolRandomMutations(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_si
 #endif
 {
     #ifdef _OPENMP
-    u32 number_of_rand = urandomu32Mod(pool_size, mystate);
+    u32 number_of_rand = urandomu32Mod(pool_size/2, mystate);
     #else
-    u32 number_of_rand = urandomu32Mod(pool_size);
+    u32 number_of_rand = urandomu32Mod(pool_size/2);
     #endif
     for(u32 i = pool_size - 1; i > pool_size - 1 - number_of_rand; i--)
         #ifdef _OPENMP
@@ -268,8 +270,8 @@ void printScores(u8 *score_pool, u32 pool_size, u128 iter)
     printu128(iter);
     printf(" :\n");
     u32 max_show = 10;
-    if((pool_size/10) < max_show)
-        max_show = (pool_size/10);
+    if(pool_size < max_show)
+        max_show = pool_size;
     for(u32 i = 0; i < max_show; i++)
         printf("score[%d] = %d;\n", i, score_pool[i]);
 }
