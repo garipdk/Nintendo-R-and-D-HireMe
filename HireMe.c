@@ -17,7 +17,7 @@
     "\t'ALLRAND': same as 'ALL IT' but the the input possible at the end of Forward is chosen randomly.\n"\
     "\t'GENETIC' : a gentic implemantation with selection/reproduction/mutation/regular random input.\n"\
     "\t'RAND' : a totaly random implemantation -> each itteration a random input is created and tested with Forward.\n"\
-    "Currently the only true solver working is the 'ALLIT' ('BASE' works too but it is not a solver).\n"\
+    "Currently the only true solver working is the 'ALLIT' ('BASE' somewhat works too but it is not a solver).\n"\
     )
 #define error_base (\
     "The command must be executed like so :\n"\
@@ -92,14 +92,31 @@
     "\t\t   (the first 0x00 must be at least at the 16th char).\n"\
     "\t<number_of_input> The number of generated input wanted (between 1 and MAX u128).\n"\
     )
-#define err_target ("<target> Must be at least 15 chars long (the first 0x00 must be at least at the 16th char).\n")
-#define err_input ("<input> Must be at least 31 chars long (the first 0x00 must be at least at the 32th char).\n")
-#define err_print_mode ("<Print_Mode> Can Be only 'A', 'C', 'N' or 'O'.\n")
-#define error_pool_size ("<pool_size> Must be at least 2 at most UINT_MAX.\n")
-#define err_input_num_gen ("<number_of_input> Must be at least 1 at most <pool_size>.\n")
-#define err_input_num ("<number_of_input> Must be at least 1 at most MAX u128.\n")
-#define error_elimination_size ("<elimination_size> Must be at least 1 at most <pool_size> - 1.\n")
-#define error_reproduce_size ("<reproduce_size> Must be at least 1 and must be less than <pool_size>/3.\n")
+#define err_target (\
+    "<target> Must be at least 15 chars long (the first 0x00 must be at least at the 16th char).\n"\
+    )
+#define err_input (\
+    "<input> Must be at least 31 chars long (the first 0x00 must be at least at the 32th char).\n"\
+    )
+#define err_print_mode (\
+    "<Print_Mode> Can Be only 'A', 'C', 'N' or 'O'.\n"\
+    )
+#define error_pool_size (\
+    "<pool_size> Must be at least 2 at most UINT_MAX.\n"\
+    )
+#define err_input_num_gen (\
+    "<number_of_input> Must be at least 1 at most <pool_size>.\n"\
+    )
+#define err_input_num (\
+    "<number_of_input> Must be at least 1 at most MAX u128.\n"\
+    )
+#define error_elimination_size (\
+    "<elimination_size> Must be at least 1 at most <pool_size> - 1.\n"\
+    )
+#define error_reproduce_size (\
+    "<reproduce_size> Must be at least 1 and must be less than <pool_size>/3.\n"\
+    )
+
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -160,6 +177,7 @@ u8 input0[32]={
 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
 //
 };
+
 u8 input_hire[32]={
 //change only this :
 0x48, 0x69, 0x72, 0x65, 0x20, 0x6d, 0x65, 0x21,
@@ -168,6 +186,7 @@ u8 input_hire[32]={
 0xea, 0xe7, 0x11, 0x7a, 0x92, 0x7f, 0x00, 0x00
 //
 };
+
 u8 input_test[32]={
 //change only this :
 0x7a, 0x87, 0xc5, 0xea, 0xfc, 0xfc, 0x60, 0xfa,
@@ -175,12 +194,14 @@ u8 input_test[32]={
 0x39, 0x95, 0xe4, 0xca, 0x0b, 0x7b, 0xb1, 0xf2,
 0x29, 0xb4, 0x50, 0x1f, 0x82, 0xa2, 0xcd, 0x25
 };
+
 u8 input_base[32]={
 //change only this :
 0x66,0xd5,0x4e,0x28,0x5f,0xff,0x6b,0x53,0xac,0x3b,0x34,0x14,0xb5,0x3c,0xb2,0xc6,
 0xa4,0x85,0x1e,0x0d,0x86,0xc7,0x4f,0xba,0x75,0x5e,0xcb,0xc3,0x6e,0x48,0x79,0x8f
 //
 };
+
 u8 diffusion_indices[32][16];
 bool urandom_set = false;
 FILE* urandom;
@@ -324,6 +345,7 @@ u128 atou128(const char *s)
 
     return val;
 }
+
 void printu128(u128 n)
 {
     u128 rem;
@@ -353,21 +375,6 @@ void prints128(__int128 n)
     return;
 }
 
-
-bool CoherantString(u8 *str, u8 size)
-{
-    for(u8 i = 0; i < size; i++)
-    {
-        if(!isprint(str[i]))
-        {
-            if(str[i]==0)
-                if(i!=0)
-                    return true;
-            return false;
-        }
-    }
-    return false;
-}
 void printCoherantParts(u8 *str, u8 size)
 {
     for(u8 i = 0; i < size; i++)
@@ -383,7 +390,11 @@ void printDetail(u8 *s, u8 size, u8 nb_per_line, u8 print_mode)
     if(print_mode == 'A')
     {
         if(size>1)
-            printf("%s\n",s);
+        {
+            for(u8 i = 0; i < size; i++)
+                printf("%c",s[i]);
+            printf("\n");
+        }
         for(u8 i = 0; i < size; i++)
         {
             printf("%03d", s[i]);
@@ -394,6 +405,27 @@ void printDetail(u8 *s, u8 size, u8 nb_per_line, u8 print_mode)
                 printf("\n");
         }
     }
+}
+
+bool CoherantString(u8 *str, u8 size)
+{
+    for(u8 i = 0; i < size; i++)
+    {
+        if(!isprint(str[i]))
+        {
+            if(str[i]==0)
+                if(i!=0)
+                    return true;
+            return false;
+        }
+    }
+    return false;
+}
+
+void tolowerStr(char *str)
+{
+    for(int i = 0; str[i]; i++)
+        str[i] = tolower(str[i]);
 }
 
 void printOneGenerated(u8 str[32], u8 print_mode, u128 it_all, u128 iterration)
@@ -433,32 +465,31 @@ void printOneGenerated(u8 str[32], u8 print_mode, u128 it_all, u128 iterration)
     }
 }
 
-
-void tolowerStr(char *str)
-{
-    for(int i = 0; str[i]; i++)
-        str[i] = tolower(str[i]);
-}
-
+#ifdef _OPENMP
 void urandomu8Str32(u8 *str, u32 *mystate)
+#else
+void urandomu8Str32(u8 *str)
+#endif
 {
     #ifdef _OPENMP
         for(u8 i = 0; i < 32; i++)
             str[i] = (u8) rand_r(mystate);
     #else
-        *mystate = 0;
         if(urandom_set)
             for(u8 i = 0; i < 32; i++)
                 str[i] = (u8) fgetc(urandom);
     #endif
 }
 
+#ifdef _OPENMP
 u8 urandomu8(u32 *mystate)
+#else
+u8 urandomu8()
+#endif
 {
     #ifdef _OPENMP
         return (u8) rand_r(mystate);
     #else
-        *mystate = 0;
         if(urandom_set)
             return (u8) fgetc(urandom);
         else
@@ -466,12 +497,15 @@ u8 urandomu8(u32 *mystate)
     #endif
 }
 
+#ifdef _OPENMP
 u8 urandomu8Mod(u8 mod, u32 *mystate)
+#else
+u8 urandomu8Mod(u8 mod)
+#endif
 {
     #ifdef _OPENMP
         return ((u8) rand_r(mystate)) % mod;
     #else
-        *mystate = 0;
         if(urandom_set)
             return ((u8) fgetc(urandom)) % mod;
         else
@@ -479,15 +513,19 @@ u8 urandomu8Mod(u8 mod, u32 *mystate)
     #endif
 }
 
+#ifdef _OPENMP
 u32 urandomu32Mod(u32 mod, u32 *mystate)
+#else
+u32 urandomu32Mod(u32 mod)
+#endif
 {
     #ifdef _OPENMP
         return ((u32) rand_r(mystate)) % mod;
     #else
-        *mystate = 0;
         return ((u32) rand()) % mod;
     #endif
 }
+
 void SimplifiedForwardDiffusion(u8 *input_, u8 *tmp_input, u8 last_input_to_save[16])
 {
     u8* temp;
@@ -525,6 +563,7 @@ void SimplifiedForwardConfusion(u8 input_[32], u8 output_[32], u8 last_input_to_
         output_[i+16] = confusion[last_input_to_save[i]];
     }
 }
+
 void SimplifiedForward(u8 input_[32], u8 output_[32])
 {
     u8 last_input_to_save[16];
@@ -532,7 +571,6 @@ void SimplifiedForward(u8 input_[32], u8 output_[32])
     SimplifiedForwardDiffusion(input_, tmp_input, last_input_to_save);
     SimplifiedForwardConfusion(input_, output_, last_input_to_save);
 }
-
 
 bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
 {
@@ -547,10 +585,10 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
     for(u8 j=0;j<32;j++)
     {
         output_[j]=0;
-        for(u8 k=0;k<32;k++)
-            output_[j]^=demanded_input[k]*((diffusion[j]>>k)&1);
-        // for(u8 k = 1; k < diffusion_indices[j][0]; k++)
-        //     output_[j]^=demanded_input[diffusion_indices[j][k]];
+        // for(u8 k=0;k<32;k++)
+        //     output_[j]^=demanded_input[k]*((diffusion[j]>>k)&1);
+        for(u8 k = 1; k < diffusion_indices[j][0]; k++)
+            output_[j]^=demanded_input[diffusion_indices[j][k]];
         
         if(output_[j] == 15  || output_[j] == 17  || output_[j] == 32  || output_[j] == 62
         || output_[j] == 68  || output_[j] == 90  || output_[j] == 107 || output_[j] == 117
@@ -620,7 +658,11 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             }
         }
     }
-
+    if(found_two_total >= 64)
+    {
+        printf("MAIS VOILAAAAAAAA !!!!!\n");
+        exit(1);
+    }
     //printf("found_two_total = %d\n", (int) pow((double) 2, (double) found_two_total));
     u64 power = pow((double) 2, (double) found_two_total);
     u8 demanded_input0[32];
@@ -670,6 +712,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
     }
     return false;
 }
+
 void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
 {
     #pragma omp parallel for schedule(static) default(shared)
@@ -694,6 +737,7 @@ void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
         }
     }
 }
+
 void SolverAllIt(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_input_num)
 {
     u8 all_pairs[16][256][2];
@@ -775,7 +819,7 @@ void SolverAllIt(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_i
         if(is_found)
             return;
     //printf("j13 = %d\n", j13);
-    #pragma omp parallel for schedule(dynamic,100) default(shared) num_threads(2)
+    #pragma omp parallel for schedule(dynamic,64) default(shared) num_threads(2)
     for(/*u16*/ u32 j14 = 0; j14 < 256; j14++)
     {
     //printf("j14 = %d\n", j14);
@@ -785,7 +829,7 @@ void SolverAllIt(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_i
         #else
             return;
         #endif
-    #pragma omp parallel for schedule(dynamic,50) default(shared) num_threads(3)
+    #pragma omp parallel for schedule(dynamic,42) default(shared) num_threads(3)
     for(/*u16*/ u32 j15 = 0; j15 < 256; j15++)
     {
     //printf("j15 = %d\n", j15);
@@ -890,58 +934,20 @@ void SolverAllRand(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen
         #else
             return;
         #endif
-        u32 mystate;
         #ifdef _OPENMP
-            mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
+        u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
         u8 demanded_input0[32];
-        demanded_input0[0] = all_pairs[0][urandomu8(&mystate)][0];
-        demanded_input0[1] = all_pairs[0][urandomu8(&mystate)][1];
-
-        demanded_input0[2] = all_pairs[1][urandomu8(&mystate)][0];
-        demanded_input0[3] = all_pairs[1][urandomu8(&mystate)][1];
-
-        demanded_input0[4] = all_pairs[2][urandomu8(&mystate)][0];
-        demanded_input0[5] = all_pairs[2][urandomu8(&mystate)][1];
-
-        demanded_input0[6] = all_pairs[3][urandomu8(&mystate)][0];
-        demanded_input0[7] = all_pairs[3][urandomu8(&mystate)][1];
-
-        demanded_input0[8] = all_pairs[4][urandomu8(&mystate)][0];
-        demanded_input0[9] = all_pairs[4][urandomu8(&mystate)][1];
-
-        demanded_input0[10] = all_pairs[5][urandomu8(&mystate)][0];
-        demanded_input0[11] = all_pairs[5][urandomu8(&mystate)][1];
-
-        demanded_input0[12] = all_pairs[6][urandomu8(&mystate)][0];
-        demanded_input0[13] = all_pairs[6][urandomu8(&mystate)][1];
-
-        demanded_input0[14] = all_pairs[7][urandomu8(&mystate)][0];
-        demanded_input0[15] = all_pairs[7][urandomu8(&mystate)][1];
-
-        demanded_input0[16] = all_pairs[8][urandomu8(&mystate)][0];
-        demanded_input0[17] = all_pairs[8][urandomu8(&mystate)][1];
-
-        demanded_input0[18] = all_pairs[9][urandomu8(&mystate)][0];
-        demanded_input0[19] = all_pairs[9][urandomu8(&mystate)][1];
-
-        demanded_input0[20] = all_pairs[10][urandomu8(&mystate)][0];
-        demanded_input0[21] = all_pairs[10][urandomu8(&mystate)][1];
-
-        demanded_input0[22] = all_pairs[11][urandomu8(&mystate)][0];
-        demanded_input0[23] = all_pairs[11][urandomu8(&mystate)][1];
-
-        demanded_input0[24] = all_pairs[12][urandomu8(&mystate)][0];
-        demanded_input0[25] = all_pairs[12][urandomu8(&mystate)][1];
-
-        demanded_input0[26] = all_pairs[13][urandomu8(&mystate)][0];
-        demanded_input0[27] = all_pairs[13][urandomu8(&mystate)][1];
-
-        demanded_input0[28] = all_pairs[14][urandomu8(&mystate)][0];
-        demanded_input0[29] = all_pairs[14][urandomu8(&mystate)][1];
-
-        demanded_input0[30] = all_pairs[15][urandomu8(&mystate)][0];
-        demanded_input0[31] = all_pairs[15][urandomu8(&mystate)][1];
+        for(u8 i = 0; i < 16; i++)
+        {
+            #ifdef _OPENMP
+            demanded_input0[i*2] = all_pairs[i][urandomu8(&mystate)][0];
+            demanded_input0[i*2+1] = all_pairs[i][urandomu8(&mystate)][1];
+            #else
+            demanded_input0[i*2] = all_pairs[i][urandomu8()][0];
+            demanded_input0[i*2+1] = all_pairs[i][urandomu8()][1];
+            #endif
+        }
         if(Backward(demanded_input0, target, 0))
         {
             #pragma omp critical
@@ -967,17 +973,20 @@ void SolverAllRand(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen
     }
     return;
 }
+
 void swap(u8 *a, u8 *b)
 {
     u8 temp = *a;
     *a = *b;
     *b = temp;
 }
+
 void swap32(u8 *a, u8 *b)
 {
     for(u8 i = 0; i < 32; i++)
         swap(&a[i], &b[i]);
 }
+
 // Selection Sort
 void SelectionSort(u8 *array1, u8 *array2, u32 n)
 {
@@ -1057,6 +1066,47 @@ void MergeSort(u8 *arr, u8 *arr2, u32 l, u32 r)
     } 
 }
 
+u8 Levenshtein(u8 *string1, u8 string2[16])
+{
+    u8 w = 1, s = 1, a = 1, d = 1;
+	u8 len1 = 16, len2 = 16;
+	u8 r0[len2+1];
+    u8 r1[len2+1];
+    u8 r2[len2+1];
+    u8 *row0, *row1, *row2;
+    row0 = r0;
+    row1 = r1;
+    row2 = r2;
+	u8 i, j;
+	for (j = 0; j <= len2; j++)
+		row1[j] = j * a;
+	for (i = 0; i < len1; i++) {
+		u8 *dummy;
+		row2[0] = (i + 1) * d;
+		for (j = 0; j < len2; j++) {
+			/* substitution */
+			row2[j + 1] = row1[j] + s * (string1[i] != string2[j]);
+			/* swap */
+			if (i > 0 && j > 0 && string1[i - 1] == string2[j] &&
+					string1[i] == string2[j - 1] &&
+					row2[j + 1] > row0[j - 1] + w)
+				row2[j + 1] = row0[j - 1] + w;
+			/* deletion */
+			if (row2[j + 1] > row1[j + 1] + d)
+				row2[j + 1] = row1[j + 1] + d;
+			/* insertion */
+			if (row2[j + 1] > row2[j] + a)
+				row2[j + 1] = row2[j] + a;
+		}
+		dummy = row0;
+		row0 = row1;
+		row1 = row2;
+		row2 = dummy;
+	}
+
+	return row1[len2];
+}
+
 u8 HammingDistBits(u8 *str, u8 target[16])
 {
     u8 count = 0;
@@ -1068,10 +1118,38 @@ u8 HammingDistBits(u8 *str, u8 target[16])
     return count;
 }
 
+u8 HammingDist(u8 *str, u8 target[16])
+{
+    u8 count = 0;
+    for(u8 i = 0; i < 16; i++)
+        if(str[i] != target[i])
+            count++;
+    
+    return count;
+}
+u8 Score(u8 *str1, u8 target[16], u8 score_func)
+{
+    u8 ret;
+    switch(score_func)
+    {
+        case 0:
+            ret = HammingDistBits(str1, target);
+            break;
+        case 1:
+            ret = HammingDist(str1, target);
+            break;
+        case 2:
+            ret = Levenshtein(str1, target);
+            break;
+        default:
+            ret = HammingDistBits(str1, target);
+    }
+    return ret;
+}
 void FindScore(u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
 {
     for(u32 i = 0; i < pool_size; i++)
-        score_pool[i] = HammingDistBits(&forward_pool[i*32], target);
+        score_pool[i] = Score(&forward_pool[i*32], target, 0);
 }
 
 void PoolSort(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
@@ -1085,54 +1163,154 @@ void PoolSort(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 targ
 
 }
 
+#ifdef _OPENMP
 void PoolInit(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
+#else
+void PoolInit(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
+#endif
 {
     for(u32 i = 0; i < pool_size; i++)
+        #ifdef _OPENMP
         urandomu8Str32(&pool[i*32], mystate);
+        #else
+        urandomu8Str32(&pool[i*32]);
+        #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
+#ifdef _OPENMP
 void PoolReplaceBadests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 elminiation_size, u8 target[16], u32 *mystate)
+#else
+void PoolReplaceBadests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 elminiation_size, u8 target[16])
+#endif
 {
     for(u32 i = pool_size - elminiation_size; i < pool_size; i++)
+        #ifdef _OPENMP
         urandomu8Str32(&pool[i*32], mystate);
+        #else
+        urandomu8Str32(&pool[i*32]);
+        #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
+#ifdef _OPENMP
 void PoolReplaceSames(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
+#else
+void PoolReplaceSames(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
+#endif
 {
     for(u32 i = 0; i < pool_size; i++)
         for(u32 j = 0; j < i; j++)
             if(memcmp(&pool[i*32], &pool[j*32], 32) == 0)
+                #ifdef _OPENMP
                 urandomu8Str32(&pool[j*32], mystate);
+                #else
+                urandomu8Str32(&pool[j*32]);
+                #endif
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
+u8 ReproduceOneu8(u8 p1, u8 p2, u8 strategy)
+{
+    u8 ret;
 
+    switch(strategy)
+    {
+        case 0:
+            ret = ((u32)p1 + (u32)p2) / 2;
+            break;
+        case 1:
+            ret = p1 ^ p2;
+            break;
+        case 2:
+            ret = p1 & p2;
+            break;
+        case 3:
+            ret = p1 | p2;
+            break;
+        case 4:
+            ret = ~(p1 ^ p2);
+            break;
+        case 5:
+            ret = ~(p1 & p2);
+            break;
+        case 6:
+            ret = ~(p1 | p2);
+            break;
+        default:
+            ret = ((u32)p1 + (u32)p2) / 2;
+            break;
+    }
+    return ret;
+}
+
+#ifdef _OPENMP
+void Reproduce(u8 *parent1, u8 *parent2, u8 *child, u32 *mystate)
+#else
 void Reproduce(u8 *parent1, u8 *parent2, u8 *child)
+#endif
 {
     for(u8 i = 0; i < 32; i++)
-        child[i] = ((int) (parent1[i] + parent2[i])) / 2;
+        #ifdef _OPENMP
+        child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7, mystate));
+        #else
+        child[i] = ReproduceOneu8(parent1[i], parent2[i], urandomu8Mod(7));
+        #endif
 }
 
+#ifdef _OPENMP
+void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16], u32 *mystate)
+#else
 void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u32 reproduce_size, u8 target[16])
+#endif
 {
-    for(long int i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
-        Reproduce(&pool[i*32], &pool[(i+1)*32], &pool[child*32]);
+    long int child;
+    u32 r, i;
+    for(i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
+    {
+        #ifdef _OPENMP
+        while(i == (r=urandomu32Mod(pool_size/2, mystate)));
+        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], mystate);
+        #else
+        while(i == (r=urandomu32Mod(pool_size/2)));
+        Reproduce(&pool[i*32], &pool[r*32], &pool[child*32]);
+        #endif
+    }
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
 
+#ifdef _OPENMP
 void RandomMutations(u8 *parent, u8 *child, u32 *mystate)
+#else
+void RandomMutations(u8 *parent, u8 *child)
+#endif
 {
     memmove(child, parent, 32);
+    #ifdef _OPENMP
     // bitsetclear(child[urandomu8Mod(32, mystate)], urandomu8Mod(8, mystate), urandomu8Mod(2, mystate));
     bitflip(child[urandomu8Mod(32, mystate)], urandomu8Mod(8, mystate));
+    #else
+    // bitsetclear(child[urandomu8Mod(32)], urandomu8Mod(8), urandomu8Mod(2));
+    bitflip(child[urandomu8Mod(32)], urandomu8Mod(8));
+    #endif
 }
 
+#ifdef _OPENMP
 void PoolRandomMutations(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16], u32 *mystate)
+#else
+void PoolRandomMutations(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_size, u8 target[16])
+#endif
 {
-    u32 number_of_rand = urandomu32Mod(pool_size/2, mystate);
+    #ifdef _OPENMP
+    u32 number_of_rand = urandomu32Mod(pool_size, mystate);
+    #else
+    u32 number_of_rand = urandomu32Mod(pool_size);
+    #endif
     for(u32 i = pool_size - 1; i > pool_size - 1 - number_of_rand; i--)
+        #ifdef _OPENMP
         RandomMutations(&pool[urandomu32Mod(number_of_rand, mystate)*32], &pool[i*32], mystate);
+        #else
+        RandomMutations(&pool[urandomu32Mod(number_of_rand)*32], &pool[i*32]);
+        #endif
 
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
 }
@@ -1150,16 +1328,17 @@ void printScores(u8 *score_pool, u32 pool_size, u128 iter)
         printf("score[%d] = %d;\n", i, score_pool[i]);
 }
 
-u8 CountScore0(u8 *score_pool, u32 pool_size)
+u32 CountScore0(u8 *score_pool, u32 pool_size)
 {
-    u8 num_score_0 = 0;
-    for(u8 i = 0; i < pool_size; i++)
+    u32 num_score_0 = 0;
+    for(u32 i = 0; i < pool_size; i++)
         if(score_pool[i] == 0)
             num_score_0++;
         else
             break;
     return num_score_0;
 }
+
 void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_input_num, u32 pool_size, u32 elminiation_size, u32 reproduce_size)
 {
     u8 p[pool_size*32];
@@ -1169,27 +1348,26 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
     u8 sp[pool_size];
     u8 *score_pool = sp;
 
-    u32 mystate0;
     #ifdef _OPENMP
-        mystate0 = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
+    u32 mystate0 = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
     #endif
     
+    #ifdef _OPENMP
     PoolInit(pool, forward_pool, score_pool, pool_size, target, &mystate0);
+    #else
+    PoolInit(pool, forward_pool, score_pool, pool_size, target);
+    #endif
     
     u128 it = 0;
-    u8 min_score = 129;
+    u8 min_score = 255;
     u32 count_0 = 0;
     
-    u32 mystate;
     while(true)
     {
-        // u32 mystate;
         #ifdef _OPENMP
-            mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
+            u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
         count_0 = CountScore0(score_pool, pool_size);
-        if(count_0 == gen_input_num)
-            break;
         if(score_pool[0] < min_score)
         {
             printScores(score_pool, pool_size, it);
@@ -1212,13 +1390,25 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
                         printDetail(pool, 32, 8, print_mode);
             }
         }
+        if(count_0 >= gen_input_num)
+            break;
+        #ifdef _OPENMP
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target, &mystate);
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
-        PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target);
+        PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target, &mystate);
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
+        #else
+        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
+        PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target);
+        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
+        PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target);
+        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
+        PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target);
+        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
+        #endif
         it++;
         if(print_mode != 'O')
         {
@@ -1245,7 +1435,6 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
 
 }
 
-
 void SolverRandom(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_input_num)
 {
 
@@ -1255,9 +1444,8 @@ void SolverRandom(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_
     #pragma omp parallel default(shared)
     while(true)
     {
-        u32 mystate;
         #ifdef _OPENMP
-            mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
+            u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
         if(is_found)
         #ifdef _OPENMP
@@ -1266,7 +1454,11 @@ void SolverRandom(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_
             return;
         #endif
         u8 demanded_input0[32];
+        #ifdef _OPENMP
         urandomu8Str32(demanded_input0, &mystate);
+        #else
+        urandomu8Str32(demanded_input0);
+        #endif
         u8 output_[32];
         SimplifiedForward(demanded_input0, output_);
         if(memcmp(output_, target, 16) == 0)
@@ -1422,7 +1614,7 @@ int main(int argc, char* argv[])
     {
         if(argc != 8)
         {
-            printf(error_allrand);
+            printf(error_genetic);
             exit(1);
         }
         u8 print_mode = VerifPrintMode(argv[2]);
@@ -1520,7 +1712,7 @@ int main(int argc, char* argv[])
     {
         if(argc != 5)
         {
-            printf(error_allrand);
+            printf(error_rand);
             exit(1);
         }
 
