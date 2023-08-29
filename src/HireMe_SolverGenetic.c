@@ -66,19 +66,13 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
         #ifdef _OPENMP
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target, &mystate);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target, &mystate);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target, &mystate);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         #else
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         #endif
         it++;
         if(print_mode != 'O')
