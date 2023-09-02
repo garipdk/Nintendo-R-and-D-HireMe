@@ -378,8 +378,8 @@ void printCoherantParts(u8 *str, u8 size)
 {
     for(u8 i = 0; i < size; i++)
         if(isprint(str[i]))
-            putchar(str[i]);
-    putchar('\n');
+            printf("%c",str[i]);
+    printf("\n");
     return;
 }
 
@@ -421,6 +421,16 @@ bool CoherantString(u8 *str, u8 size)
     return false;
 }
 
+bool TrueCoherantString(u8 *str, u8 size)
+{
+    for(u8 i = 0; i < size - 1; i++)
+        if(!isprint(str[i]))
+            return false;
+    if(isprint(str[size - 1]) || str[size - 1] == 0)
+        return true;
+    return false;
+}
+
 void tolowerStr(char *str)
 {
     for(int i = 0; str[i]; i++)
@@ -429,6 +439,23 @@ void tolowerStr(char *str)
 
 void printOneGenerated(u8 str[32], u8 print_mode, u128 it_all, u128 iterration)
 {
+    if(TrueCoherantString(str, 32))
+    {
+        printf("Itteration = ");
+        printu128(it_all);
+        printf(";\n");
+        printf("Input Found Number = ");
+        printu128(iterration);
+        printf(";\n\n");
+        printf("===================================================\n");
+        printf("===================================================\n");
+        printf("FOUND A TRUE COHERRANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n");
+        printDetail(str, 32, 8, 'A');
+        printf("\nFOUND A TRUE COHERRANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        printf("===================================================\n");
+        printf("===================================================\n\n");
+        exit(0);
+    }
     if(print_mode != 'O')
     {
         if(CoherantString(str, 32))
@@ -442,9 +469,9 @@ void printOneGenerated(u8 str[32], u8 print_mode, u128 it_all, u128 iterration)
                 printu128(iterration);
                 printf(";\n");
                 printf("===================================================\n");
-                printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                 printDetail(str, 32, 8, print_mode);
-                printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                 printf("===================================================\n");
             }
         }
@@ -569,21 +596,35 @@ void SimplifiedForward(u8 input_[32], u8 output_[32])
     SimplifiedForwardConfusion(input_, output_, last_input_to_save);
 }
 
-bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
+void realloc_s(u8 **ptr, u128 taille)
+{
+    u8 *ptr_realloc = realloc(*ptr, taille);
+    if(taille != 0)
+    {
+        if(ptr_realloc != NULL)
+            *ptr = ptr_realloc;
+        else
+        {
+            *ptr = realloc(*ptr, 0);
+            printf("REALLOC RETURNED NULL !\n");
+            exit(1);
+        }
+    }
+    else
+        *ptr = ptr_realloc;
+}
+
+void Backward(u8 demanded_input[32], u8 target[16], u32 i, u8 **input_possibles, u128 *number_in)
 {
     if(i == 256)
-        return false;
+        return;
 
     u8 output_[32];
     u8 found_num[32];
 
-    //printf("i == %d\n", i);
-    // #pragma omp parallel for schedule(static) default(shared)
     for(u8 j=0;j<32;j++)
     {
         output_[j]=0;
-        // for(u8 k=0;k<32;k++)
-        //     output_[j]^=demanded_input[k]*((diffusion[j]>>k)&1);
         for(u8 k = 1; k < diffusion_indices[j][0]; k++)
             output_[j]^=demanded_input[diffusion_indices[j][k]];
         
@@ -591,15 +632,14 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         || output_[j] == 68  || output_[j] == 90  || output_[j] == 107 || output_[j] == 117
         || output_[j] == 128 || output_[j] == 158 || output_[j] == 175 || output_[j] == 177
         || output_[j] == 203 || output_[j] == 213 || output_[j] == 228 || output_[j] == 250)
-            return false;
+            return;
     }
     u8 found_two_total = 0;
 
-    // #pragma omp parallel for schedule(static) default(shared) reduction(+:found_two_total)
     for(u8 j = 0; j < 32; j++)
     {
         found_num[j] = 0;
-        for(/*u16*/ u32 k = 0; k < 256; k++)
+        for(u32 k = 0; k < 256; k++)
             if(output_[j] == confusion[k])
                 found_num[j]++;
         
@@ -609,8 +649,6 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
     
     u8 found[found_two_total][2];
 
-
-    // #pragma omp parallel for schedule(dynamic) default(shared)
     for(u8 j = 0; j < found_two_total; j++)
     {
         found[j][0]=0;
@@ -623,7 +661,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         if(found_num[j]==2)
         {
             u8 num_found_two0 = 0;
-            for(/*u16*/ u32 k = 0; k < 256; k++)
+            for(u32 k = 0; k < 256; k++)
             {
                 if(num_found_two0==2)
                     break;
@@ -636,14 +674,13 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
                 num_found_two++;
         }
     }
-    // #pragma omp parallel for schedule(static) default(shared)
+
     for(u8 j = 0; j < 32; j++)
     {
         if(found_num[j]==1)
         {
             u8 omp_region_finished = 0;
-            // #pragma omp parallel for schedule(static) default(shared)
-            for(/*u16*/ u32 k = 0; k < 256; k++)
+            for(u32 k = 0; k < 256; k++)
             {
                 if(omp_region_finished)
                     break;
@@ -655,12 +692,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             }
         }
     }
-    if(found_two_total >= 64)
-    {
-        printf("MAIS VOILAAAAAAAA !!!!!\n");
-        exit(1);
-    }
-    //printf("found_two_total = %d\n", (int) pow((double) 2, (double) found_two_total));
+
     u64 power = 1 << found_two_total;
     u8 demanded_input0[32];
     if(power>1)
@@ -673,7 +705,6 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             {
                 if(found_num[j]==2)
                 {
-                    //printf("%d -> %ld -> %d: %ld\n", i, i1, j, (i1>>num_found_two)&1);
                     if((i1>>num_found_two)&1)
                         demanded_input[j] = found[num_found_two][1];
                     else
@@ -681,16 +712,14 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
                     num_found_two++;
                 }
             }
-            if(Backward(demanded_input, target, i+1))
-                return true;
+            Backward(demanded_input, target, i+1, input_possibles, number_in);
             memcpy(demanded_input, demanded_input0, 32);
         }
     }
     else
     {
         memcpy(demanded_input0, demanded_input, 32);
-        if(Backward(demanded_input, target, i+1))
-            return true;
+        Backward(demanded_input, target, i+1, input_possibles, number_in);
         memcpy(demanded_input, demanded_input0, 32);
 
     }
@@ -702,12 +731,15 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         SimplifiedForward(demanded_input0, output0_);
         if(memcmp(output0_, target, 16)==0)
         {
-            // printf("%s\n", output0_);
-            return true;
+            realloc_s(input_possibles, (*number_in) + 32);
+            u8 num;
+            u128 i; 
+            for(i = (*number_in), num = 0; i < ((*number_in) + 32) && num < 32; i++, num++)
+                (*input_possibles)[i] = demanded_input[num];
+            *number_in += 32;
         }
-        // printDetail(demanded_input0, 32, 8, 'A');
     }
-    return false;
+    return;
 }
 
 void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
@@ -715,10 +747,10 @@ void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
     #pragma omp parallel for schedule(static) default(shared)
     for(u8 i = 0; i < 16; i++)
     {
-        /*u16*/ u32 found = 0;
-        for(/*u16*/ u32 k = 0; k < 256; k++)
+        u32 found = 0;
+        for(u32 k = 0; k < 256; k++)
         {
-            for(/*u16*/ u32 j = 256; j < 512; j++)
+            for(u32 j = 256; j < 512; j++)
             {
                 if((confusion[k]^confusion[j]) == target[i])
                 {
@@ -738,98 +770,80 @@ void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
 void SolverAllIt(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_input_num)
 {
     u8 all_pairs[16][256][2];
-
     GeneratePairs(target, all_pairs);
     if(print_mode != 'O')
         printf("All pairs computed!\n");
-    
     u128 iterration = 0;
     bool is_found = false;
     u128 it_all = 0;
-    for(/*u16*/ u32 j0 = 0; j0 < 256; j0++)
+    for(u32 j0 = 0; j0 < 256; j0++)
     {
         if(is_found)
             return;
-    //printf("j0 = %d\n", j0);
-    for(/*u16*/ u32 j1 = 0; j1 < 256; j1++)
+    for(u32 j1 = 0; j1 < 256; j1++)
     {
         if(is_found)
             return;
-    //printf("j1 = %d\n", j1);
-    for(/*u16*/ u32 j2 = 0; j2 < 256; j2++)
+    for(u32 j2 = 0; j2 < 256; j2++)
     {
         if(is_found)
             return;
-    //printf("j2 = %d\n", j2);
-    for(/*u16*/ u32 j3 = 0; j3 < 256; j3++)
+    for(u32 j3 = 0; j3 < 256; j3++)
     {
         if(is_found)
             return;
-    //printf("j3 = %d\n", j3);
-    for(/*u16*/ u32 j4 = 0; j4 < 256; j4++)
+    for(u32 j4 = 0; j4 < 256; j4++)
     {
         if(is_found)
             return;
-    //printf("j4 = %d\n", j4);
-    for(/*u16*/ u32 j5 = 0; j5 < 256; j5++)
+    for(u32 j5 = 0; j5 < 256; j5++)
     {
         if(is_found)
             return;
-    //printf("j5 = %d\n", j5);
-    for(/*u16*/ u32 j6 = 0; j6 < 256; j6++)
+    for(u32 j6 = 0; j6 < 256; j6++)
     {
         if(is_found)
             return;
-    //printf("j6 = %d\n", j6);
-    for(/*u16*/ u32 j7 = 0; j7 < 256; j7++)
+    for(u32 j7 = 0; j7 < 256; j7++)
     {
         if(is_found)
             return;
-    //printf("j7 = %d\n", j7);
-    for(/*u16*/ u32 j8 = 0; j8 < 256; j8++)
+    for(u32 j8 = 0; j8 < 256; j8++)
     {
         if(is_found)
             return;
-    //printf("j8 = %d\n", j8);
-    for(/*u16*/ u32 j9 = 0; j9 < 256; j9++)
+    for(u32 j9 = 0; j9 < 256; j9++)
     {
         if(is_found)
             return;
-    //printf("j9 = %d\n", j9);
-    for(/*u16*/ u32 j10 = 0; j10 < 256; j10++)
+    for(u32 j10 = 0; j10 < 256; j10++)
     {
         if(is_found)
             return;
-    //printf("j10 = %d\n", j10);
-    for(/*u16*/ u32 j11 = 0; j11 < 256; j11++)
+    for(u32 j11 = 0; j11 < 256; j11++)
     {
         if(is_found)
             return;
-    //printf("j11 = %d\n", j11);
-    for(/*u16*/ u32 j12 = 0; j12 < 256; j12++)
+    for(u32 j12 = 0; j12 < 256; j12++)
     {
         if(is_found)
             return;
-    //printf("j12 = %d\n", j12);
-    for(/*u16*/ u32 j13 = 0; j13 < 256; j13++)
+    for(u32 j13 = 0; j13 < 256; j13++)
     {
         if(is_found)
             return;
-    //printf("j13 = %d\n", j13);
-    #pragma omp parallel for schedule(dynamic,64) default(shared) num_threads(2)
-    for(/*u16*/ u32 j14 = 0; j14 < 256; j14++)
+    #pragma omp parallel for schedule(static, 10) default(shared) num_threads(2)
+    for(u32 j14 = 0; j14 < 256; j14++)
     {
-    //printf("j14 = %d\n", j14);
         if(is_found)
         #ifdef _OPENMP
             continue;
         #else
             return;
         #endif
-    #pragma omp parallel for schedule(dynamic,42) default(shared) num_threads(3)
-    for(/*u16*/ u32 j15 = 0; j15 < 256; j15++)
+    #pragma omp parallel for schedule(static, 39) default(shared) num_threads(4)
+    for(u32 j15 = 0; j15 < 256; j15++)
     {
-    //printf("j15 = %d\n", j15);
         if(is_found)
         #ifdef _OPENMP
             continue;
@@ -884,28 +898,37 @@ void SolverAllIt(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_i
 
         demanded_input0[30] = all_pairs[15][j15][0];
         demanded_input0[31] = all_pairs[15][j15][1];
-        if(Backward(demanded_input0, target, 0))
+        u8 *input_possibles = NULL;
+        u128 number_in = 0;
+        Backward(demanded_input0, target, 0, &input_possibles, &number_in);
+        if(number_in > 0)
         {
             #pragma omp critical
             {
                 if(is_found == false)
                 {
-                    //#pragma omp atomic update
-                        iterration++;
-                    if(iterration == gen_input_num)
+                    iterration += (number_in/32);
+                    if(iterration >= gen_input_num)
                     {
                         is_found = true;
-                        memcpy(demanded_input, demanded_input0, 32);
+                        memcpy(demanded_input, input_possibles, 32);
+                        for(u128 i = 0, c = (iterration - (number_in/32)); c < gen_input_num; i+=32, c++)
+                            printOneGenerated(&input_possibles[i], print_mode, it_all, (iterration - (number_in/32)) + i/32);
+                    }
+                    else
+                    {
+                        for(u128 i = 0; i < number_in; i+=32)
+                            printOneGenerated(&input_possibles[i], print_mode, it_all, (iterration - (number_in/32)) + i/32);
                     }
                 }
-                printOneGenerated(demanded_input0, print_mode, it_all, iterration);
             }
         }
+        realloc_s(&input_possibles, 0);
         if(print_mode != 'O')
         {
             #pragma omp atomic update
                 it_all++;
-        }
+    }
     }}}}}}}}}}}}}}}}
     
     return;
@@ -916,6 +939,7 @@ void SolverAllRand(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen
     u8 all_pairs[16][256][2];
 
     GeneratePairs(target, all_pairs);
+
     if(print_mode != 'O')
         printf("All pairs computed!\n");
     
@@ -923,49 +947,54 @@ void SolverAllRand(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen
     bool is_found = false;
     u128 it_all = 0;
     #pragma omp parallel default(shared)
-    while(true)
     {
-        if(is_found)
         #ifdef _OPENMP
-            continue;
-        #else
-            return;
+            u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
-        #ifdef _OPENMP
-        u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
-        #endif
-        u8 demanded_input0[32];
-        for(u8 i = 0; i < 16; i++)
+        while(!is_found)
         {
-            #ifdef _OPENMP
-            demanded_input0[i*2] = all_pairs[i][urandomu8(&mystate)][0];
-            demanded_input0[i*2+1] = all_pairs[i][urandomu8(&mystate)][1];
-            #else
-            demanded_input0[i*2] = all_pairs[i][urandomu8()][0];
-            demanded_input0[i*2+1] = all_pairs[i][urandomu8()][1];
-            #endif
-        }
-        if(Backward(demanded_input0, target, 0))
-        {
-            #pragma omp critical
+            u8 demanded_input0[32];
+            for(u8 i = 0; i < 16; i++)
             {
-                if(is_found == false)
+                #ifdef _OPENMP
+                demanded_input0[i*2] = all_pairs[i][urandomu8(&mystate)][0];
+                demanded_input0[i*2+1] = all_pairs[i][urandomu8(&mystate)][1];
+                #else
+                demanded_input0[i*2] = all_pairs[i][urandomu8()][0];
+                demanded_input0[i*2+1] = all_pairs[i][urandomu8()][1];
+                #endif
+            }
+            u8 *input_possibles = NULL;
+            u128 number_in = 0;
+            Backward(demanded_input0, target, 0, &input_possibles, &number_in);
+            if(number_in > 0)
+            {
+                #pragma omp critical
                 {
-                    // #pragma omp atomic update
-                        iterration++;
-                    if(iterration == gen_input_num)
+                    if(is_found == false)
                     {
-                        is_found = true;
-                        memcpy(demanded_input, demanded_input0, 32);
+                        iterration += (number_in/32);
+                        if(iterration >= gen_input_num)
+                        {
+                            is_found = true;
+                            memcpy(demanded_input, input_possibles, 32);
+                            for(u128 i = 0; i < (((iterration - gen_input_num) + 1) * 32); i+=32)
+                                printOneGenerated(&input_possibles[i], print_mode, 0, i/32);
+                        }
+                        else
+                        {
+                            for(u128 i = 0; i < number_in; i+=32)
+                                printOneGenerated(&input_possibles[i], print_mode, 0, i/32);
+                        }
                     }
                 }
-                printOneGenerated(demanded_input0, print_mode, it_all, iterration);
             }
-        }
-        if(print_mode != 'O')
-        {
-            #pragma omp atomic update
-                it_all++;
+            realloc_s(&input_possibles, 0);
+            if(print_mode != 'O')
+            {
+                #pragma omp atomic update
+                    it_all++;
+            }
         }
     }
     return;
@@ -1259,7 +1288,7 @@ void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_siz
     long int child;
     u32 r, i;
     static u8 rand = 0;
-    static u8 last_min = 128;
+    u8 last_min = score_pool[0];
     for(i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
     {
         #ifdef _OPENMP
@@ -1270,9 +1299,7 @@ void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_siz
         Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], rand);
     }
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
-    if(score_pool[0] < last_min)
-        last_min = score_pool[0];
-    else
+    if(score_pool[0] >= last_min)
         rand = (rand + 1) % 7;
 }
 
@@ -1378,9 +1405,9 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
                     if(print_mode == 'C' || print_mode == 'A')
                     {
                         printf("===================================================\n");
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printDetail(pool, 32, 8, print_mode);
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printf("===================================================\n");
                     }
                 }
@@ -1392,19 +1419,13 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
         if(count_0 >= gen_input_num)
             break;
         #ifdef _OPENMP
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target, &mystate);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target, &mystate);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         #else
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target);
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target);
         PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         #endif
@@ -1418,9 +1439,9 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
                     if(print_mode == 'C' || print_mode == 'A')
                     {
                         printf("===================================================\n");
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printDetail(&pool[i], 32, 8, print_mode);
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printf("===================================================\n");
                     }
                 }
@@ -1441,45 +1462,43 @@ void SolverRandom(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_
     bool is_found = false;
     u128 it_all = 0;
     #pragma omp parallel default(shared)
-    while(true)
     {
         #ifdef _OPENMP
             u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
-        if(is_found)
-        #ifdef _OPENMP
-            continue;
-        #else
-            return;
-        #endif
-        u8 demanded_input0[32];
-        #ifdef _OPENMP
-        urandomu8Str32(demanded_input0, &mystate);
-        #else
-        urandomu8Str32(demanded_input0);
-        #endif
-        u8 output_[32];
-        SimplifiedForward(demanded_input0, output_);
-        if(memcmp(output_, target, 16) == 0)
+        while(!is_found)
         {
-            #pragma omp critical
+            u8 demanded_input0[32];
+            u8 demanded_input1[32];
+            #ifdef _OPENMP
+            urandomu8Str32(demanded_input0, &mystate);
+            #else
+            urandomu8Str32(demanded_input0);
+            #endif
+            u8 output_[32];
+            memcpy(demanded_input1, demanded_input0, 32);
+            SimplifiedForward(demanded_input0, output_);
+            if(memcmp(output_, target, 16) == 0)
             {
-                if(is_found == false)
+                #pragma omp critical
                 {
-                    iterration++;
-                    if(iterration == gen_input_num)
+                    if(is_found == false)
                     {
-                        is_found = true;
-                        memcpy(demanded_input, demanded_input0, 32);
+                        iterration++;
+                        if(iterration == gen_input_num)
+                        {
+                            is_found = true;
+                            memcpy(demanded_input, demanded_input1, 32);
+                        }
                     }
+                    printOneGenerated(demanded_input1, print_mode, it_all, iterration);
                 }
-                printOneGenerated(demanded_input0, print_mode, it_all, iterration);
             }
-        }
-        if(print_mode != 'O')
-        {
-            #pragma omp atomic update
-                it_all++;
+            if(print_mode != 'O')
+            {
+                #pragma omp atomic update
+                    it_all++;
+            }
         }
     }
     return;
@@ -1507,7 +1526,6 @@ int main(int argc, char* argv[])
             omp_set_num_threads(8);
         #endif
         u8 output_base[32];
-        // u8 output[32];
         u8 input_save[32];
         memcpy(input_save, input, 32);
         if(print_mode != 'O')
@@ -1521,13 +1539,26 @@ int main(int argc, char* argv[])
             printf("Forward Input :\n");
             printDetail(input, 32, 8, print_mode);
         }
-        Backward(input, output_base, 0);
+        u8 *input_possibles = NULL;
+        u128 number_in = 0;
+        Backward(input, output_base, 0, &input_possibles, &number_in);
         if(print_mode != 'O')
         {
-            printf("Backward Input :\n");
-            printDetail(input, 32, 8, print_mode);
+            for(u128 i = 0; i < number_in; i+=32)
+            {
+                printOneGenerated(&input_possibles[i], print_mode, 0, number_in/32);
+            }
         }
-        return memcmp(input, input_save, 32);
+        for(u128 i = 0; i < number_in; i+=32)
+        {
+            if(memcmp(&input_possibles[i], input_save, 32) == 0)
+            {
+                realloc_s(&input_possibles, 0);
+                return 0;
+            }
+        }
+        realloc_s(&input_possibles, 0);
+        return 1;
     }
     else if(strcmp(argv[1], "allit") == 0)
     {

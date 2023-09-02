@@ -50,9 +50,9 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
                     if(print_mode == 'C' || print_mode == 'A')
                     {
                         printf("===================================================\n");
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printDetail(pool, 32, 8, print_mode);
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printf("===================================================\n");
                     }
                 }
@@ -64,15 +64,15 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
         if(count_0 >= gen_input_num)
             break;
         #ifdef _OPENMP
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target, &mystate);
         PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target, &mystate);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target, &mystate);
+        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target, &mystate);
         #else
-        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         PoolReplaceBadests(pool, forward_pool, score_pool, pool_size, elminiation_size, target);
         PoolReproduceBests(pool, forward_pool, score_pool, pool_size, reproduce_size, target);
         PoolRandomMutations(pool, forward_pool, score_pool, pool_size, target);
+        PoolReplaceSames(pool, forward_pool, score_pool, pool_size, target);
         #endif
         it++;
         if(print_mode != 'O')
@@ -84,9 +84,9 @@ void SolverGenetic(u8 demanded_input[32], u8 target[16], u8 print_mode, u32 gen_
                     if(print_mode == 'C' || print_mode == 'A')
                     {
                         printf("===================================================\n");
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printDetail(&pool[i], 32, 8, print_mode);
-                        printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                        printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                         printf("===================================================\n");
                     }
                 }

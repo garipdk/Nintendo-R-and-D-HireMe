@@ -19,45 +19,43 @@ void SolverRandom(u8 demanded_input[32], u8 target[16], u8 print_mode, u128 gen_
     bool is_found = false;
     u128 it_all = 0;
     #pragma omp parallel default(shared)
-    while(true)
     {
         #ifdef _OPENMP
             u32 mystate = (u32) (time(NULL) ^ getpid() ^ omp_get_thread_num());
         #endif
-        if(is_found)
-        #ifdef _OPENMP
-            continue;
-        #else
-            return;
-        #endif
-        u8 demanded_input0[32];
-        #ifdef _OPENMP
-        urandomu8Str32(demanded_input0, &mystate);
-        #else
-        urandomu8Str32(demanded_input0);
-        #endif
-        u8 output_[32];
-        SimplifiedForward(demanded_input0, output_);
-        if(memcmp(output_, target, 16) == 0)
+        while(!is_found)
         {
-            #pragma omp critical
+            u8 demanded_input0[32];
+            u8 demanded_input1[32];
+            #ifdef _OPENMP
+            urandomu8Str32(demanded_input0, &mystate);
+            #else
+            urandomu8Str32(demanded_input0);
+            #endif
+            u8 output_[32];
+            memcpy(demanded_input1, demanded_input0, 32);
+            SimplifiedForward(demanded_input0, output_);
+            if(memcmp(output_, target, 16) == 0)
             {
-                if(is_found == false)
+                #pragma omp critical
                 {
-                    iterration++;
-                    if(iterration == gen_input_num)
+                    if(is_found == false)
                     {
-                        is_found = true;
-                        memcpy(demanded_input, demanded_input0, 32);
+                        iterration++;
+                        if(iterration == gen_input_num)
+                        {
+                            is_found = true;
+                            memcpy(demanded_input, demanded_input1, 32);
+                        }
                     }
+                    printOneGenerated(demanded_input1, print_mode, it_all, iterration);
                 }
-                printOneGenerated(demanded_input0, print_mode, it_all, iterration);
             }
-        }
-        if(print_mode != 'O')
-        {
-            #pragma omp atomic update
-                it_all++;
+            if(print_mode != 'O')
+            {
+                #pragma omp atomic update
+                    it_all++;
+            }
         }
     }
     return;

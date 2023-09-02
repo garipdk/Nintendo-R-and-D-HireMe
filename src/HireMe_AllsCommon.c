@@ -4,25 +4,40 @@
 #include "HireMe_u8.h"
 #include "HireMe_u32.h"
 #include "HireMe_u64.h"
+#include "HireMe_u128.h"
 #include "HireMe_AllsCommon.h"
 #include "HireMe_globals.h"
 #include "HireMe_SimplifiedForward.h"
 
-bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
+void realloc_s(u8 **ptr, u128 taille)
+{
+    u8 *ptr_realloc = realloc(*ptr, taille);
+    if(taille != 0)
+    {
+        if(ptr_realloc != NULL)
+            *ptr = ptr_realloc;
+        else
+        {
+            *ptr = realloc(*ptr, 0);
+            printf("REALLOC RETURNED NULL !\n");
+            exit(1);
+        }
+    }
+    else
+        *ptr = ptr_realloc;
+}
+
+void Backward(u8 demanded_input[32], u8 target[16], u32 i, u8 **input_possibles, u128 *number_in)
 {
     if(i == 256)
-        return false;
+        return;
 
     u8 output_[32];
     u8 found_num[32];
 
-    //printf("i == %d\n", i);
-    // #pragma omp parallel for schedule(static) default(shared)
     for(u8 j=0;j<32;j++)
     {
         output_[j]=0;
-        // for(u8 k=0;k<32;k++)
-        //     output_[j]^=demanded_input[k]*((diffusion[j]>>k)&1);
         for(u8 k = 1; k < diffusion_indices[j][0]; k++)
             output_[j]^=demanded_input[diffusion_indices[j][k]];
         
@@ -30,15 +45,14 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         || output_[j] == 68  || output_[j] == 90  || output_[j] == 107 || output_[j] == 117
         || output_[j] == 128 || output_[j] == 158 || output_[j] == 175 || output_[j] == 177
         || output_[j] == 203 || output_[j] == 213 || output_[j] == 228 || output_[j] == 250)
-            return false;
+            return;
     }
     u8 found_two_total = 0;
 
-    // #pragma omp parallel for schedule(static) default(shared) reduction(+:found_two_total)
     for(u8 j = 0; j < 32; j++)
     {
         found_num[j] = 0;
-        for(/*u16*/ u32 k = 0; k < 256; k++)
+        for(u32 k = 0; k < 256; k++)
             if(output_[j] == confusion[k])
                 found_num[j]++;
         
@@ -48,8 +62,6 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
     
     u8 found[found_two_total][2];
 
-
-    // #pragma omp parallel for schedule(dynamic) default(shared)
     for(u8 j = 0; j < found_two_total; j++)
     {
         found[j][0]=0;
@@ -62,7 +74,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         if(found_num[j]==2)
         {
             u8 num_found_two0 = 0;
-            for(/*u16*/ u32 k = 0; k < 256; k++)
+            for(u32 k = 0; k < 256; k++)
             {
                 if(num_found_two0==2)
                     break;
@@ -75,14 +87,13 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
                 num_found_two++;
         }
     }
-    // #pragma omp parallel for schedule(static) default(shared)
+
     for(u8 j = 0; j < 32; j++)
     {
         if(found_num[j]==1)
         {
             u8 omp_region_finished = 0;
-            // #pragma omp parallel for schedule(static) default(shared)
-            for(/*u16*/ u32 k = 0; k < 256; k++)
+            for(u32 k = 0; k < 256; k++)
             {
                 if(omp_region_finished)
                     break;
@@ -94,12 +105,7 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             }
         }
     }
-    if(found_two_total >= 64)
-    {
-        printf("MAIS VOILAAAAAAAA !!!!!\n");
-        exit(1);
-    }
-    //printf("found_two_total = %d\n", (int) pow((double) 2, (double) found_two_total));
+
     u64 power = 1 << found_two_total;
     u8 demanded_input0[32];
     if(power>1)
@@ -112,7 +118,6 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
             {
                 if(found_num[j]==2)
                 {
-                    //printf("%d -> %ld -> %d: %ld\n", i, i1, j, (i1>>num_found_two)&1);
                     if((i1>>num_found_two)&1)
                         demanded_input[j] = found[num_found_two][1];
                     else
@@ -120,16 +125,14 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
                     num_found_two++;
                 }
             }
-            if(Backward(demanded_input, target, i+1))
-                return true;
+            Backward(demanded_input, target, i+1, input_possibles, number_in);
             memcpy(demanded_input, demanded_input0, 32);
         }
     }
     else
     {
         memcpy(demanded_input0, demanded_input, 32);
-        if(Backward(demanded_input, target, i+1))
-            return true;
+        Backward(demanded_input, target, i+1, input_possibles, number_in);
         memcpy(demanded_input, demanded_input0, 32);
 
     }
@@ -141,12 +144,15 @@ bool Backward(u8 demanded_input[32], u8 target[16], /*u16*/ u32 i)
         SimplifiedForward(demanded_input0, output0_);
         if(memcmp(output0_, target, 16)==0)
         {
-            // printf("%s\n", output0_);
-            return true;
+            realloc_s(input_possibles, (*number_in) + 32);
+            u8 num;
+            u128 i; 
+            for(i = (*number_in), num = 0; i < ((*number_in) + 32) && num < 32; i++, num++)
+                (*input_possibles)[i] = demanded_input[num];
+            *number_in += 32;
         }
-        // printDetail(demanded_input0, 32, 8, 'A');
     }
-    return false;
+    return;
 }
 
 void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
@@ -154,10 +160,10 @@ void GeneratePairs(u8 target[16], u8 all_pairs[16][256][2])
     #pragma omp parallel for schedule(static) default(shared)
     for(u8 i = 0; i < 16; i++)
     {
-        /*u16*/ u32 found = 0;
-        for(/*u16*/ u32 k = 0; k < 256; k++)
+        u32 found = 0;
+        for(u32 k = 0; k < 256; k++)
         {
-            for(/*u16*/ u32 j = 256; j < 512; j++)
+            for(u32 j = 256; j < 512; j++)
             {
                 if((confusion[k]^confusion[j]) == target[i])
                 {

@@ -208,7 +208,7 @@ void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_siz
     long int child;
     u32 r, i;
     static u8 rand = 0;
-    static u8 last_min = 128;
+    u8 last_min = score_pool[0];
     for(i = 0, child = pool_size - 1; i < reproduce_size && child > 0 ; i+=2, child--)
     {
         #ifdef _OPENMP
@@ -219,9 +219,7 @@ void PoolReproduceBests(u8 *pool, u8 *forward_pool, u8 *score_pool, u32 pool_siz
         Reproduce(&pool[i*32], &pool[r*32], &pool[child*32], rand);
     }
     PoolSort(pool, forward_pool, score_pool, pool_size, target);
-    if(score_pool[0] < last_min)
-        last_min = score_pool[0];
-    else
+    if(score_pool[0] >= last_min)
         rand = (rand + 1) % 7;
 }
 

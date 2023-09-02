@@ -18,6 +18,16 @@ bool CoherantString(u8 *str, u8 size)
     return false;
 }
 
+bool TrueCoherantString(u8 *str, u8 size)
+{
+    for(u8 i = 0; i < size - 1; i++)
+        if(!isprint(str[i]))
+            return false;
+    if(isprint(str[size - 1]) || str[size - 1] == 0)
+        return true;
+    return false;
+}
+
 void tolowerStr(char *str)
 {
     for(int i = 0; str[i]; i++)

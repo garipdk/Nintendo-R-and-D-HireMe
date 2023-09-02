@@ -38,8 +38,8 @@ void printCoherantParts(u8 *str, u8 size)
 {
     for(u8 i = 0; i < size; i++)
         if(isprint(str[i]))
-            putchar(str[i]);
-    putchar('\n');
+            printf("%c",str[i]);
+    printf("\n");
     return;
 }
 
@@ -68,6 +68,24 @@ void printDetail(u8 *s, u8 size, u8 nb_per_line, u8 print_mode)
 
 void printOneGenerated(u8 str[32], u8 print_mode, u128 it_all, u128 iterration)
 {
+    if(TrueCoherantString(str, 32))
+    {
+        printf("Itteration = ");
+        printu128(it_all);
+        printf(";\n");
+        printf("Input Found Number = ");
+        printu128(iterration);
+        printf(";\n\n");
+        printf("===================================================\n");
+        printf("===================================================\n");
+        printf("FOUND A TRUE COHERRANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n");
+        printDetail(str, 32, 8, 'A');
+        printf("\nFOUND A TRUE COHERRANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        printf("===================================================\n");
+        printf("===================================================\n\n");
+        // EXIT WHEN FIND A TRUE COHERANT !!!
+        exit(0);
+    }
     if(print_mode != 'O')
     {
         if(CoherantString(str, 32))
@@ -81,9 +99,9 @@ void printOneGenerated(u8 str[32], u8 print_mode, u128 it_all, u128 iterration)
                 printu128(iterration);
                 printf(";\n");
                 printf("===================================================\n");
-                printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                 printDetail(str, 32, 8, print_mode);
-                printf("FOUND A COHERRANT!!!!!!!!!!!!\n");
+                printf("FOUND A COHERRANT !!!!!!!!!!!!\n");
                 printf("===================================================\n");
             }
         }

@@ -6,6 +6,8 @@
 
 bool CoherantString(u8 *str, u8 size);
 
+bool TrueCoherantString(u8 *str, u8 size);
+
 void tolowerStr(char *str);
 
 #endif // HireMe_strings

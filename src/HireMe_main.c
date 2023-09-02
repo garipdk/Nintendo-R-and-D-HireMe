@@ -57,6 +57,7 @@ given output).
 Even fewer people have reached this final level. Congratulations to them!
 
 */
+
 int main(int argc, char* argv[])
 {
     if(argc < 2)
@@ -79,7 +80,6 @@ int main(int argc, char* argv[])
             omp_set_num_threads(8);
         #endif
         u8 output_base[32];
-        // u8 output[32];
         u8 input_save[32];
         memcpy(input_save, input, 32);
         if(print_mode != 'O')
@@ -93,13 +93,26 @@ int main(int argc, char* argv[])
             printf("Forward Input :\n");
             printDetail(input, 32, 8, print_mode);
         }
-        Backward(input, output_base, 0);
+        u8 *input_possibles = NULL;
+        u128 number_in = 0;
+        Backward(input, output_base, 0, &input_possibles, &number_in);
         if(print_mode != 'O')
         {
-            printf("Backward Input :\n");
-            printDetail(input, 32, 8, print_mode);
+            for(u128 i = 0; i < number_in; i+=32)
+            {
+                printOneGenerated(&input_possibles[i], print_mode, 0, number_in/32);
+            }
         }
-        return memcmp(input, input_save, 32);
+        for(u128 i = 0; i < number_in; i+=32)
+        {
+            if(memcmp(&input_possibles[i], input_save, 32) == 0)
+            {
+                realloc_s(&input_possibles, 0);
+                return 0;
+            }
+        }
+        realloc_s(&input_possibles, 0);
+        return 1;
     }
     else if(strcmp(argv[1], "allit") == 0)
     {
@@ -185,7 +198,7 @@ int main(int argc, char* argv[])
     {
         if(argc != 8)
         {
-            printf(error_allrand);
+            printf(error_genetic);
             exit(1);
         }
         u8 print_mode = VerifPrintMode(argv[2]);
@@ -283,7 +296,7 @@ int main(int argc, char* argv[])
     {
         if(argc != 5)
         {
-            printf(error_allrand);
+            printf(error_rand);
             exit(1);
         }
 
