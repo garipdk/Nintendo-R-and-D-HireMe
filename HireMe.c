@@ -403,6 +403,19 @@ void printDetail(u8 *s, u8 size, u8 nb_per_line, u8 print_mode)
             if((i+1)%nb_per_line==0)
                 printf("\n");
         }
+        if(size%nb_per_line!=0)
+            printf("\n");
+        for(u8 i = 0; i < size; i++)
+        {
+            printf("0x%02hhx", s[i]);
+            if(i+1<size)
+                printf(", ");
+
+            if((i+1)%nb_per_line==0)
+                printf("\n");
+        }
+        if(size%nb_per_line!=0)
+            printf("\n");
     }
 }
 
